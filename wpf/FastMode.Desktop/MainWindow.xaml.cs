@@ -34,6 +34,7 @@ public partial class MainWindow : Window
         ChkTopmost.IsChecked = _settings.AlwaysOnTop;
         Topmost = _settings.AlwaysOnTop;
         TxtCustomSpeed.Text = _settings.CurrentSpeed.ToString("0.###");
+        TxtSearch.ToolTip = "搜索窗口标题 / 进程名";
         RebuildPresets();
         RefreshProcesses();
         UpdateHotkeyText();
@@ -183,7 +184,8 @@ public partial class MainWindow : Window
             {
                 TxtStatus.Text = $"已记录倍速 {speed:0.###}x（尚未附加）";
             }
-            RebuildPresets();
+            TxtSearch.ToolTip = "搜索窗口标题 / 进程名";
+        RebuildPresets();
             UpdateSpeedState();
         }
         catch (Exception ex)
@@ -248,7 +250,8 @@ public partial class MainWindow : Window
             {
                 _settings.Presets = vals;
                 SettingsService.Save(_settings);
-                RebuildPresets();
+                TxtSearch.ToolTip = "搜索窗口标题 / 进程名";
+        RebuildPresets();
             }
         }
     }
@@ -341,3 +344,4 @@ public partial class MainWindow : Window
         TxtError.Text = "";
     }
 }
+

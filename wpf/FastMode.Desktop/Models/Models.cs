@@ -4,8 +4,16 @@ public sealed class ProcessItem
 {
     public uint Pid { get; init; }
     public string Name { get; init; } = "";
+    public string Title { get; init; } = "";
     public string Arch { get; init; } = "unknown";
-    public string Display => $"{Name}  ·  PID {Pid}  ·  {Arch}";
+    public string Path { get; init; } = "";
+    public System.Windows.Media.ImageSource? Icon { get; init; }
+
+    public string DisplayPrimary =>
+        string.IsNullOrWhiteSpace(Title) ? Name : Title;
+
+    public string DisplaySecondary =>
+        $"{Name}  ·  PID {Pid}  ·  {Arch}";
 }
 
 public sealed class AppSettings
