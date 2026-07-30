@@ -15,11 +15,10 @@ public partial class MainWindow : Window
     private readonly SpeedhackService _speed = new();
     private readonly GamepadService _pad = new();
     private AppSettings _settings = SettingsService.Load();
-    private bool _recording;
-    private List<int> _recorded = new();
     private DispatcherTimer? _searchTimer;
     private Brush? _statusNormalBrush;
     private Brush? _statusErrorBrush;
+    private OverlayWindow? _overlay;
 
     public MainWindow()
     {
@@ -30,6 +29,7 @@ public partial class MainWindow : Window
         {
             _pad.Dispose();
             _speed.Dispose();
+            CloseOverlay();
         };
     }
 
@@ -40,8 +40,9 @@ public partial class MainWindow : Window
 
         ChkTopmost.IsChecked = _settings.AlwaysOnTop;
         Topmost = _settings.AlwaysOnTop;
-        // MiniSwitch on blue title uses white labels; enable switch on white card needs dark text - set for enable below content
         ChkEnable.Foreground = (Brush)FindResource("ColorBrush1");
+        ChkFloating.Foreground = (Brush)FindResource("ColorBrush1");
+        ChkFloating.IsChecked = _settings.FloatingEnabled;
 
         TxtCustomSpeed.Text = _settings.CurrentSpeed.ToString("0.###");
         RebuildPresets();
@@ -49,6 +50,7 @@ public partial class MainWindow : Window
         UpdateHotkeyText();
         UpdateSpeedState();
         SetStatus("就绪", error: false);
+        ApplyOverlayState();
 
         _pad.Updated += OnGamepadUpdated;
         _pad.Start(() => _settings.HotkeyButtons);
@@ -57,13 +59,8 @@ public partial class MainWindow : Window
     #region window chrome
     private void TitleBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
-        if (e.ClickCount == 2)
-        {
-            // optional: no maximize to keep tool simple; ignore
-            return;
-        }
-        if (e.ChangedButton == MouseButton.Left)
-            DragMove();
+        if (e.ClickCount == 2) return;
+        if (e.ChangedButton == MouseButton.Left) DragMove();
     }
 
     private void BtnMin_Click(object sender, RoutedEventArgs e) => WindowState = WindowState.Minimized;
@@ -75,29 +72,12 @@ public partial class MainWindow : Window
         if (e.LeftButton != MouseButtonState.Pressed) return;
         var mode = dir switch
         {
-            "N" => ResizeDirection.Top,
-            "S" => ResizeDirection.Bottom,
-            "W" => ResizeDirection.Left,
-            "E" => ResizeDirection.Right,
-            "NW" => ResizeDirection.TopLeft,
-            "NE" => ResizeDirection.TopRight,
-            "SW" => ResizeDirection.BottomLeft,
-            "SE" => ResizeDirection.BottomRight,
-            _ => ResizeDirection.BottomRight
+            "N" => 3, "S" => 6, "W" => 1, "E" => 2,
+            "NW" => 4, "NE" => 5, "SW" => 7, "SE" => 8,
+            _ => 8
         };
-        ResizeWindow(mode);
+        SendMessage(new System.Windows.Interop.WindowInteropHelper(this).Handle, 0x112, (IntPtr)(0xF000 + mode), IntPtr.Zero);
         e.Handled = true;
-    }
-
-    private enum ResizeDirection
-    {
-        Left = 1, Right = 2, Top = 3, TopLeft = 4, TopRight = 5,
-        Bottom = 6, BottomLeft = 7, BottomRight = 8
-    }
-
-    private void ResizeWindow(ResizeDirection direction)
-    {
-        SendMessage(new System.Windows.Interop.WindowInteropHelper(this).Handle, 0x112, (IntPtr)(0xF000 + direction), IntPtr.Zero);
     }
 
     [DllImport("user32.dll")]
@@ -171,6 +151,7 @@ public partial class MainWindow : Window
             TxtAttach.Text = st.Message;
             ChkEnable.IsChecked = false;
             UpdateSpeedState();
+            SyncOverlay();
             SetStatus(st.Message, error: false);
         }
         catch (Exception ex)
@@ -187,6 +168,7 @@ public partial class MainWindow : Window
         ChkEnable.IsChecked = false;
         TxtAttach.Text = st.Message;
         UpdateSpeedState();
+        SyncOverlay();
         SetStatus(st.Message, error: false);
     }
 
@@ -199,6 +181,7 @@ public partial class MainWindow : Window
             {
                 ChkEnable.IsChecked = false;
                 SetStatus("请先附加目标进程", error: true);
+                SyncOverlay();
                 return;
             }
             var enabled = ChkEnable.IsChecked == true;
@@ -206,13 +189,53 @@ public partial class MainWindow : Window
             _settings.Enabled = enabled;
             SettingsService.Save(_settings);
             UpdateSpeedState();
+            SyncOverlay();
             SetStatus(st.Message, error: false);
         }
         catch (Exception ex)
         {
             ChkEnable.IsChecked = false;
+            SyncOverlay();
             SetStatus(ex.Message, error: true);
         }
+    }
+
+    private void ChkFloating_Changed(object sender, RoutedEventArgs e)
+    {
+        if (!IsLoaded) return;
+        _settings.FloatingEnabled = ChkFloating.IsChecked == true;
+        SettingsService.Save(_settings);
+        ApplyOverlayState();
+        SetStatus(_settings.FloatingEnabled ? "悬浮窗已开启" : "悬浮窗已关闭", error: false);
+    }
+
+    private void ApplyOverlayState()
+    {
+        if (_settings.FloatingEnabled)
+        {
+            if (_overlay == null)
+            {
+                _overlay = new OverlayWindow();
+                _overlay.Show();
+            }
+            SyncOverlay();
+        }
+        else CloseOverlay();
+    }
+
+    private void SyncOverlay()
+    {
+        _overlay?.SetEnabledState(_settings.Enabled && _speed.State.Attached && _speed.State.Enabled);
+        // use settings.Enabled after attach semantics: show On only when speedhack actively enabled
+        var on = ChkEnable.IsChecked == true && _speed.State.Attached;
+        _overlay?.SetEnabledState(on);
+    }
+
+    private void CloseOverlay()
+    {
+        if (_overlay == null) return;
+        try { _overlay.Close(); } catch { /* ignore */ }
+        _overlay = null;
     }
 
     private void BtnApplySpeed_Click(object sender, RoutedEventArgs e)
@@ -255,66 +278,16 @@ public partial class MainWindow : Window
         SettingsService.Save(_settings);
     }
 
-    private void BtnHotkey_Click(object sender, RoutedEventArgs e)
-    {
-        if (_recording)
-        {
-            if (_recorded.Count > 0)
-            {
-                _settings.HotkeyButtons = _recorded.OrderBy(x => x).ToList();
-                SettingsService.Save(_settings);
-            }
-            _recording = false;
-            _recorded.Clear();
-            SetStatus("快捷键已保存", error: false);
-            UpdateHotkeyText();
-            return;
-        }
-        _recording = true;
-        _recorded.Clear();
-        SetStatus("录制中：按下组合键后再次点「改键」保存；右键恢复默认", error: false);
-        UpdateHotkeyText();
-    }
-
     private void BtnSettings_Click(object sender, RoutedEventArgs e)
     {
-        var presets = string.Join(", ", _settings.Presets.Select(p => p.ToString("0.###")));
-        var input = new PromptWindow(
-            "设置",
-            "倍速预设（逗号分隔）：",
-            presets,
-            extra: $"当前快捷键：{GamepadService.FormatHotkey(_settings.HotkeyButtons)}\n主界面「改键」可录制。\nFastMode 0.3 · PCL 风格壳")
-        { Owner = this };
-        if (input.ShowDialog() == true)
+        var win = new SettingsWindow(_settings.HotkeyButtons) { Owner = this };
+        if (win.ShowDialog() == true)
         {
-            var vals = input.Value
-                .Split(new[] { ',', '，', ' ', ';' }, StringSplitOptions.RemoveEmptyEntries)
-                .Select(s => float.TryParse(s, out var f) ? f : -1)
-                .Where(f => f > 0).Take(8).ToList();
-            if (vals.Count > 0)
-            {
-                _settings.Presets = vals;
-                SettingsService.Save(_settings);
-                RebuildPresets();
-                SetStatus("预设已更新", error: false);
-            }
-        }
-    }
-
-    protected override void OnMouseRightButtonUp(MouseButtonEventArgs e)
-    {
-        if (_recording)
-        {
-            _settings.HotkeyButtons = new List<int> { 4, 5 };
+            _settings.HotkeyButtons = win.ResultHotkeys;
             SettingsService.Save(_settings);
-            _recording = false;
-            _recorded.Clear();
             UpdateHotkeyText();
-            SetStatus("已恢复默认 LB + RB", error: false);
-            e.Handled = true;
-            return;
+            SetStatus("手柄快捷键已更新：" + GamepadService.FormatHotkey(_settings.HotkeyButtons), error: false);
         }
-        base.OnMouseRightButtonUp(e);
     }
 
     private void OnGamepadUpdated(GamepadStatus status, bool edge)
@@ -322,15 +295,6 @@ public partial class MainWindow : Window
         Dispatcher.Invoke(() =>
         {
             TxtGamepad.Text = status.Connected ? (status.Name ?? "手柄已连接") : "手柄未连接";
-            if (_recording)
-            {
-                if (status.ButtonsPressed.Count > 0)
-                {
-                    _recorded = status.ButtonsPressed.Distinct().OrderBy(x => x).ToList();
-                    UpdateHotkeyText();
-                }
-                return;
-            }
             UpdateHotkeyText();
             if (!edge) return;
             if (!_speed.State.Attached)
@@ -346,6 +310,7 @@ public partial class MainWindow : Window
                 SettingsService.Save(_settings);
                 ChkEnable.IsChecked = next;
                 UpdateSpeedState();
+                SyncOverlay();
                 SetStatus("手柄切换 · " + st.Message, error: false);
             }
             catch (Exception ex)
@@ -357,16 +322,7 @@ public partial class MainWindow : Window
 
     private void UpdateHotkeyText()
     {
-        if (_recording)
-        {
-            TxtHotkey.Text = _recorded.Count == 0 ? "录制中…" : GamepadService.FormatHotkey(_recorded) + " · 再点保存";
-            BtnHotkey.Content = "保存";
-        }
-        else
-        {
-            TxtHotkey.Text = GamepadService.FormatHotkey(_settings.HotkeyButtons);
-            BtnHotkey.Content = "改键";
-        }
+        TxtHotkey.Text = GamepadService.FormatHotkey(_settings.HotkeyButtons);
     }
 
     private void UpdateSpeedState()

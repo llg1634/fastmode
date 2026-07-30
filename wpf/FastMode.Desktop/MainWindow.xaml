@@ -45,13 +45,9 @@
               <CheckBox x:Name="ChkTopmost" Style="{StaticResource MiniSwitch}" Content="置顶" Margin="0,0,14,0"
                         Checked="ChkTopmost_Changed" Unchecked="ChkTopmost_Changed"/>
               <Border Background="#22FFFFFF" CornerRadius="8" Padding="10,4" Margin="0,0,8,0">
-                <StackPanel Orientation="Horizontal">
-                  <StackPanel Margin="0,0,8,0">
-                    <TextBlock x:Name="TxtGamepad" Text="手柄未连接" Foreground="#E6FFFFFF" FontSize="11"/>
-                    <TextBlock x:Name="TxtHotkey" Text="LB + RB" Foreground="White" FontSize="11" FontWeight="SemiBold"/>
-                  </StackPanel>
-                  <Button x:Name="BtnHotkey" Content="改键" Style="{StaticResource TitleIconButton}" Width="Auto" Padding="8,0"
-                          Foreground="White" Click="BtnHotkey_Click" FontSize="11"/>
+                <StackPanel>
+                  <TextBlock x:Name="TxtGamepad" Text="手柄未连接" Foreground="#E6FFFFFF" FontSize="11"/>
+                  <TextBlock x:Name="TxtHotkey" Text="LB + RB" Foreground="White" FontSize="11" FontWeight="SemiBold"/>
                 </StackPanel>
               </Border>
               <Button x:Name="BtnSettings" Content="设置" Style="{StaticResource TitleIconButton}" Width="Auto" Padding="10,0"
@@ -171,6 +167,18 @@
                 <TextBox x:Name="TxtCustomSpeed" Style="{StaticResource FieldTextBox}" Margin="0,0,8,0"/>
               </DockPanel>
               <TextBlock x:Name="TxtSpeedState" Foreground="{StaticResource ColorBrushGray3}" FontSize="12" Margin="0,12,0,0"/>
+
+              <Border Margin="0,18,0,0" Padding="12,10" Background="{StaticResource ColorBrush8}" BorderBrush="#B7D9C6" BorderThickness="1" CornerRadius="10">
+                <DockPanel>
+                  <CheckBox x:Name="ChkFloating" DockPanel.Dock="Right" Style="{StaticResource MiniSwitch}" Content="启用"
+                            Foreground="{StaticResource ColorBrush1}"
+                            Checked="ChkFloating_Changed" Unchecked="ChkFloating_Changed"/>
+                  <StackPanel>
+                    <TextBlock Text="悬浮窗" FontWeight="SemiBold" Foreground="{StaticResource ColorBrush1}"/>
+                    <TextBlock Text="36×36 置顶小方块，显示 On / Off" Foreground="{StaticResource ColorBrushGray3}" FontSize="11" Margin="0,2,0,0"/>
+                  </StackPanel>
+                </DockPanel>
+              </Border>
             </StackPanel>
           </Border>
         </Grid>
@@ -202,5 +210,6 @@
                PreviewMouseLeftButtonDown="Resize_MouseDown" Tag="SE"/>
   </Grid>
 </Window>
+
 
 

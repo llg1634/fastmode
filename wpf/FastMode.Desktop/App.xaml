@@ -220,7 +220,68 @@
           </Setter.Value>
         </Setter>
       </Style>
+
+      <Style x:Key="SettingsNavItem" TargetType="RadioButton">
+        <Setter Property="Margin" Value="0,0,0,8"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="Template">
+          <Setter.Value>
+            <ControlTemplate TargetType="RadioButton">
+              <Border x:Name="bd" Background="Transparent" CornerRadius="8" Padding="12,10">
+                <ContentPresenter VerticalAlignment="Center"/>
+              </Border>
+              <ControlTemplate.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                  <Setter TargetName="bd" Property="Background" Value="{StaticResource ColorBrush7}"/>
+                </Trigger>
+                <Trigger Property="IsChecked" Value="True">
+                  <Setter TargetName="bd" Property="Background" Value="{StaticResource ColorBrush6}"/>
+                  <Setter Property="FontWeight" Value="SemiBold"/>
+                  <Setter Property="Foreground" Value="{StaticResource ColorBrush2}"/>
+                </Trigger>
+              </ControlTemplate.Triggers>
+            </ControlTemplate>
+          </Setter.Value>
+        </Setter>
+      </Style>
+
+      <Style x:Key="PadKey" TargetType="Button">
+        <Setter Property="Foreground" Value="{StaticResource ColorBrush1}"/>
+        <Setter Property="FontSize" Value="11"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Background" Value="White"/>
+        <Setter Property="BorderBrush" Value="#B7D9C6"/>
+        <Setter Property="Template">
+          <Setter.Value>
+            <ControlTemplate TargetType="Button">
+              <Border x:Name="bd" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1.2" CornerRadius="6" Padding="2">
+                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+              </Border>
+              <ControlTemplate.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                  <Setter TargetName="bd" Property="Opacity" Value="0.92"/>
+                </Trigger>
+              </ControlTemplate.Triggers>
+            </ControlTemplate>
+          </Setter.Value>
+        </Setter>
+      </Style>
+
+      <Style x:Key="PadKeyRound" TargetType="Button" BasedOn="{StaticResource PadKey}">
+        <Setter Property="Template">
+          <Setter.Value>
+            <ControlTemplate TargetType="Button">
+              <Border x:Name="bd" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1.2" CornerRadius="999">
+                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+              </Border>
+            </ControlTemplate>
+          </Setter.Value>
+        </Setter>
+      </Style>
     </ResourceDictionary>
   </Application.Resources>
 </Application>
+
 

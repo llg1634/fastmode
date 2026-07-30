@@ -24,6 +24,7 @@ public sealed class AppSettings
     public bool Enabled { get; set; }
     public List<int> HotkeyButtons { get; set; } = new() { 4, 5 };
     public string? LastProcessName { get; set; }
+    public bool FloatingEnabled { get; set; }
 }
 
 public sealed class AttachInfo
