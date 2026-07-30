@@ -1,0 +1,30 @@
+@import "tailwindcss";
+
+:root {
+  color-scheme: light;
+  --bg: #f4f6f5;
+  --bg-card: #ffffff;
+  --bg-muted: #eef2f0;
+  --border: #e2e8e4;
+  --text: #1f2933;
+  --text-secondary: #5b6b63;
+  --text-tertiary: #8a9a91;
+  --accent: #3f9d6a;
+  --accent-soft: #e7f6ee;
+  --danger: #d14343;
+  --ok: #2f9b63;
+  --shadow: 0 1px 2px rgba(16, 24, 20, 0.04), 0 8px 24px rgba(16, 24, 20, 0.04);
+  font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+* { box-sizing: border-box; }
+html, body, #root {
+  margin: 0;
+  min-height: 100%;
+  background: var(--bg);
+  color: var(--text);
+}
+button, input { font: inherit; }
