@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -34,11 +35,14 @@ public partial class MainWindow : Window
 
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
-        _statusNormalBrush = (Brush)FindResource("MutedBrush");
-        _statusErrorBrush = (Brush)FindResource("DangerBrush");
+        _statusNormalBrush = (Brush)FindResource("ColorBrushGray3");
+        _statusErrorBrush = (Brush)FindResource("ColorBrushRedDark");
 
         ChkTopmost.IsChecked = _settings.AlwaysOnTop;
         Topmost = _settings.AlwaysOnTop;
+        // MiniSwitch on blue title uses white labels; enable switch on white card needs dark text - set for enable below content
+        ChkEnable.Foreground = (Brush)FindResource("ColorBrush1");
+
         TxtCustomSpeed.Text = _settings.CurrentSpeed.ToString("0.###");
         RebuildPresets();
         RefreshProcesses();
@@ -49,6 +53,56 @@ public partial class MainWindow : Window
         _pad.Updated += OnGamepadUpdated;
         _pad.Start(() => _settings.HotkeyButtons);
     }
+
+    #region window chrome
+    private void TitleBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (e.ClickCount == 2)
+        {
+            // optional: no maximize to keep tool simple; ignore
+            return;
+        }
+        if (e.ChangedButton == MouseButton.Left)
+            DragMove();
+    }
+
+    private void BtnMin_Click(object sender, RoutedEventArgs e) => WindowState = WindowState.Minimized;
+    private void BtnClose_Click(object sender, RoutedEventArgs e) => Close();
+
+    private void Resize_MouseDown(object sender, MouseButtonEventArgs e)
+    {
+        if (sender is not FrameworkElement fe || fe.Tag is not string dir) return;
+        if (e.LeftButton != MouseButtonState.Pressed) return;
+        var mode = dir switch
+        {
+            "N" => ResizeDirection.Top,
+            "S" => ResizeDirection.Bottom,
+            "W" => ResizeDirection.Left,
+            "E" => ResizeDirection.Right,
+            "NW" => ResizeDirection.TopLeft,
+            "NE" => ResizeDirection.TopRight,
+            "SW" => ResizeDirection.BottomLeft,
+            "SE" => ResizeDirection.BottomRight,
+            _ => ResizeDirection.BottomRight
+        };
+        ResizeWindow(mode);
+        e.Handled = true;
+    }
+
+    private enum ResizeDirection
+    {
+        Left = 1, Right = 2, Top = 3, TopLeft = 4, TopRight = 5,
+        Bottom = 6, BottomLeft = 7, BottomRight = 8
+    }
+
+    private void ResizeWindow(ResizeDirection direction)
+    {
+        SendMessage(new System.Windows.Interop.WindowInteropHelper(this).Handle, 0x112, (IntPtr)(0xF000 + direction), IntPtr.Zero);
+    }
+
+    [DllImport("user32.dll")]
+    private static extern IntPtr SendMessage(IntPtr hWnd, int msg, IntPtr wParam, IntPtr lParam);
+    #endregion
 
     private void RebuildPresets()
     {
@@ -79,9 +133,7 @@ public partial class MainWindow : Window
         var list = ProcessService.List(q);
         ListProcesses.ItemsSource = list;
         if (selectedPid != null)
-        {
             ListProcesses.SelectedItem = list.FirstOrDefault(x => x.Pid == selectedPid);
-        }
     }
 
     private void TxtSearch_TextChanged(object sender, TextChangedEventArgs e)
@@ -185,10 +237,7 @@ public partial class MainWindow : Window
                 var st = _speed.SetSpeed(speed, _settings.Enabled);
                 SetStatus(st.Message, error: false);
             }
-            else
-            {
-                SetStatus($"已记录倍速 {speed:0.###}x（尚未附加）", error: false);
-            }
+            else SetStatus($"已记录倍速 {speed:0.###}x（尚未附加）", error: false);
             RebuildPresets();
             UpdateSpeedState();
         }
@@ -221,7 +270,6 @@ public partial class MainWindow : Window
             UpdateHotkeyText();
             return;
         }
-
         _recording = true;
         _recorded.Clear();
         SetStatus("录制中：按下组合键后再次点「改键」保存；右键恢复默认", error: false);
@@ -235,21 +283,14 @@ public partial class MainWindow : Window
             "设置",
             "倍速预设（逗号分隔）：",
             presets,
-            extra:
-            $"当前快捷键：{GamepadService.FormatHotkey(_settings.HotkeyButtons)}\n" +
-            "主界面「改键」可录制手柄组合。\n" +
-            "FastMode 0.2.0 · WPF 原生")
-        {
-            Owner = this
-        };
+            extra: $"当前快捷键：{GamepadService.FormatHotkey(_settings.HotkeyButtons)}\n主界面「改键」可录制。\nFastMode 0.3 · PCL 风格壳")
+        { Owner = this };
         if (input.ShowDialog() == true)
         {
             var vals = input.Value
                 .Split(new[] { ',', '，', ' ', ';' }, StringSplitOptions.RemoveEmptyEntries)
                 .Select(s => float.TryParse(s, out var f) ? f : -1)
-                .Where(f => f > 0)
-                .Take(8)
-                .ToList();
+                .Where(f => f > 0).Take(8).ToList();
             if (vals.Count > 0)
             {
                 _settings.Presets = vals;
@@ -280,10 +321,7 @@ public partial class MainWindow : Window
     {
         Dispatcher.Invoke(() =>
         {
-            TxtGamepad.Text = status.Connected
-                ? (status.Name ?? "手柄已连接")
-                : "手柄未连接";
-
+            TxtGamepad.Text = status.Connected ? (status.Name ?? "手柄已连接") : "手柄未连接";
             if (_recording)
             {
                 if (status.ButtonsPressed.Count > 0)
@@ -293,10 +331,7 @@ public partial class MainWindow : Window
                 }
                 return;
             }
-
-            // keep hotkey summary visible while connected/disconnected
-            if (!_recording) UpdateHotkeyText();
-
+            UpdateHotkeyText();
             if (!edge) return;
             if (!_speed.State.Attached)
             {
@@ -324,9 +359,7 @@ public partial class MainWindow : Window
     {
         if (_recording)
         {
-            TxtHotkey.Text = _recorded.Count == 0
-                ? "录制中…"
-                : GamepadService.FormatHotkey(_recorded) + " · 再点保存";
+            TxtHotkey.Text = _recorded.Count == 0 ? "录制中…" : GamepadService.FormatHotkey(_recorded) + " · 再点保存";
             BtnHotkey.Content = "保存";
         }
         else
@@ -343,9 +376,6 @@ public partial class MainWindow : Window
         TxtSpeedState.Text = $"当前：{sp:0.###}x · {(en ? "已启用" : "未启用")}";
     }
 
-    /// <summary>
-    /// Fixed bottom status only — never inserts banners that reflow the page.
-    /// </summary>
     private void SetStatus(string msg, bool error)
     {
         TxtStatus.Text = msg;
