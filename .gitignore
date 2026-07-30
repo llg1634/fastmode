@@ -1,0 +1,30 @@
+# OS
+Windows
+Thumbs.db
+Desktop.ini
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*.user
+
+# Build / deps
+node_modules/
+dist/
+build/
+target/
+.dart_tool/
+.flutter-plugins-dependencies
+*.dll
+*.exe
+*.pdb
+*.obj
+*.lib
+*.exp
+
+# Env / local
+.env
+.env.*
+*.log
+.DS_Store
