@@ -59,3 +59,7 @@ dist-ssr
 
 !src-tauri/resources/*.dll
 
+
+# WPF
+wpf/**/bin/
+wpf/**/obj/
