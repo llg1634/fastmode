@@ -134,7 +134,35 @@
           </Setter.Value>
         </Setter>
       </Style>
+
+      <Style x:Key="MiniSwitch" TargetType="CheckBox">
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Template">
+          <Setter.Value>
+            <ControlTemplate TargetType="CheckBox">
+              <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                <Border x:Name="track" Width="36" Height="20" CornerRadius="10" Background="#D7DDD9" VerticalAlignment="Center">
+                  <Ellipse x:Name="thumb" Width="16" Height="16" Fill="White" HorizontalAlignment="Left" Margin="2,0,0,0">
+                    <Ellipse.Effect>
+                      <DropShadowEffect BlurRadius="4" ShadowDepth="1" Opacity="0.2"/>
+                    </Ellipse.Effect>
+                  </Ellipse>
+                </Border>
+                <ContentPresenter Margin="8,0,0,0" VerticalAlignment="Center"/>
+              </StackPanel>
+              <ControlTemplate.Triggers>
+                <Trigger Property="IsChecked" Value="True">
+                  <Setter TargetName="track" Property="Background" Value="{StaticResource AccentBrush}"/>
+                  <Setter TargetName="thumb" Property="HorizontalAlignment" Value="Right"/>
+                  <Setter TargetName="thumb" Property="Margin" Value="0,0,2,0"/>
+                </Trigger>
+              </ControlTemplate.Triggers>
+            </ControlTemplate>
+          </Setter.Value>
+        </Setter>
+      </Style>
     </ResourceDictionary>
   </Application.Resources>
 </Application>
+
 

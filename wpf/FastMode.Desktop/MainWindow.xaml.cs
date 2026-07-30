@@ -2,6 +2,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
+using System.Windows.Media;
 using System.Windows.Threading;
 using FastMode.Models;
 using FastMode.Services;
@@ -16,6 +17,8 @@ public partial class MainWindow : Window
     private bool _recording;
     private List<int> _recorded = new();
     private DispatcherTimer? _searchTimer;
+    private Brush? _statusNormalBrush;
+    private Brush? _statusErrorBrush;
 
     public MainWindow()
     {
@@ -31,18 +34,20 @@ public partial class MainWindow : Window
 
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
+        _statusNormalBrush = (Brush)FindResource("MutedBrush");
+        _statusErrorBrush = (Brush)FindResource("DangerBrush");
+
         ChkTopmost.IsChecked = _settings.AlwaysOnTop;
         Topmost = _settings.AlwaysOnTop;
         TxtCustomSpeed.Text = _settings.CurrentSpeed.ToString("0.###");
-        TxtSearch.ToolTip = "搜索窗口标题 / 进程名";
         RebuildPresets();
         RefreshProcesses();
         UpdateHotkeyText();
         UpdateSpeedState();
+        SetStatus("就绪", error: false);
 
         _pad.Updated += OnGamepadUpdated;
         _pad.Start(() => _settings.HotkeyButtons);
-        TxtStatus.Text = "就绪 · 原生 WPF（不依赖本地 Web 端口）";
     }
 
     private void RebuildPresets()
@@ -70,7 +75,13 @@ public partial class MainWindow : Window
     private void RefreshProcesses()
     {
         var q = TxtSearch.Text?.Trim() ?? "";
-        ListProcesses.ItemsSource = ProcessService.List(q);
+        var selectedPid = (ListProcesses.SelectedItem as ProcessItem)?.Pid;
+        var list = ProcessService.List(q);
+        ListProcesses.ItemsSource = list;
+        if (selectedPid != null)
+        {
+            ListProcesses.SelectedItem = list.FirstOrDefault(x => x.Pid == selectedPid);
+        }
     }
 
     private void TxtSearch_TextChanged(object sender, TextChangedEventArgs e)
@@ -89,17 +100,14 @@ public partial class MainWindow : Window
     }
 
     private void BtnRefresh_Click(object sender, RoutedEventArgs e) => RefreshProcesses();
-
     private void ListProcesses_MouseDoubleClick(object sender, MouseButtonEventArgs e) => DoAttach();
-
     private void BtnAttach_Click(object sender, RoutedEventArgs e) => DoAttach();
 
     private void DoAttach()
     {
-        ClearError();
         if (ListProcesses.SelectedItem is not ProcessItem item)
         {
-            ShowError("请先选择一个进程");
+            SetStatus("请先选择一个进程", error: true);
             return;
         }
         try
@@ -109,51 +117,49 @@ public partial class MainWindow : Window
             _settings.Enabled = false;
             SettingsService.Save(_settings);
             TxtAttach.Text = st.Message;
-            TxtStatus.Text = st.Message;
             ChkEnable.IsChecked = false;
             UpdateSpeedState();
+            SetStatus(st.Message, error: false);
         }
         catch (Exception ex)
         {
-            ShowError(ex.Message);
+            SetStatus(ex.Message, error: true);
         }
     }
 
     private void BtnDetach_Click(object sender, RoutedEventArgs e)
     {
-        ClearError();
         var st = _speed.Detach();
         _settings.Enabled = false;
         SettingsService.Save(_settings);
         ChkEnable.IsChecked = false;
         TxtAttach.Text = st.Message;
-        TxtStatus.Text = st.Message;
         UpdateSpeedState();
+        SetStatus(st.Message, error: false);
     }
 
     private void ChkEnable_Changed(object sender, RoutedEventArgs e)
     {
         if (!IsLoaded) return;
-        ClearError();
         try
         {
             if (!_speed.State.Attached)
             {
                 ChkEnable.IsChecked = false;
-                throw new InvalidOperationException("请先附加目标进程");
+                SetStatus("请先附加目标进程", error: true);
+                return;
             }
             var enabled = ChkEnable.IsChecked == true;
-            var speed = _settings.CurrentSpeed;
-            var st = _speed.SetSpeed(speed, enabled);
+            var st = _speed.SetSpeed(_settings.CurrentSpeed, enabled);
             _settings.Enabled = enabled;
             SettingsService.Save(_settings);
-            TxtStatus.Text = st.Message;
             UpdateSpeedState();
+            SetStatus(st.Message, error: false);
         }
         catch (Exception ex)
         {
             ChkEnable.IsChecked = false;
-            ShowError(ex.Message);
+            SetStatus(ex.Message, error: true);
         }
     }
 
@@ -161,7 +167,7 @@ public partial class MainWindow : Window
     {
         if (!float.TryParse(TxtCustomSpeed.Text, out var speed))
         {
-            ShowError("倍速必须是数字");
+            SetStatus("倍速必须是数字", error: true);
             return;
         }
         ApplySpeed(speed);
@@ -169,7 +175,6 @@ public partial class MainWindow : Window
 
     private void ApplySpeed(float speed)
     {
-        ClearError();
         try
         {
             _settings.CurrentSpeed = speed;
@@ -178,19 +183,18 @@ public partial class MainWindow : Window
             if (_speed.State.Attached)
             {
                 var st = _speed.SetSpeed(speed, _settings.Enabled);
-                TxtStatus.Text = st.Message;
+                SetStatus(st.Message, error: false);
             }
             else
             {
-                TxtStatus.Text = $"已记录倍速 {speed:0.###}x（尚未附加）";
+                SetStatus($"已记录倍速 {speed:0.###}x（尚未附加）", error: false);
             }
-            TxtSearch.ToolTip = "搜索窗口标题 / 进程名";
-        RebuildPresets();
+            RebuildPresets();
             UpdateSpeedState();
         }
         catch (Exception ex)
         {
-            ShowError(ex.Message);
+            SetStatus(ex.Message, error: true);
         }
     }
 
@@ -213,15 +217,14 @@ public partial class MainWindow : Window
             }
             _recording = false;
             _recorded.Clear();
-            BtnSettings.IsEnabled = true;
-            TxtStatus.Text = "快捷键已保存";
+            SetStatus("快捷键已保存", error: false);
             UpdateHotkeyText();
             return;
         }
 
         _recording = true;
         _recorded.Clear();
-        TxtStatus.Text = "录制中：请按下手柄组合键，再点一次“修改快捷键”保存；右键可恢复默认";
+        SetStatus("录制中：按下组合键后再次点「改键」保存；右键恢复默认", error: false);
         UpdateHotkeyText();
     }
 
@@ -233,8 +236,9 @@ public partial class MainWindow : Window
             "倍速预设（逗号分隔）：",
             presets,
             extra:
-            $"当前快捷键：{GamepadService.FormatHotkey(_settings.HotkeyButtons)}\n\n" +
-            "提示：主界面点“修改快捷键”可手柄录制。\n关于：FastMode 0.2.0 · WPF 原生 · 加速 DLL 独立实现")
+            $"当前快捷键：{GamepadService.FormatHotkey(_settings.HotkeyButtons)}\n" +
+            "主界面「改键」可录制手柄组合。\n" +
+            "FastMode 0.2.0 · WPF 原生")
         {
             Owner = this
         };
@@ -250,8 +254,8 @@ public partial class MainWindow : Window
             {
                 _settings.Presets = vals;
                 SettingsService.Save(_settings);
-                TxtSearch.ToolTip = "搜索窗口标题 / 进程名";
-        RebuildPresets();
+                RebuildPresets();
+                SetStatus("预设已更新", error: false);
             }
         }
     }
@@ -265,7 +269,7 @@ public partial class MainWindow : Window
             _recording = false;
             _recorded.Clear();
             UpdateHotkeyText();
-            TxtStatus.Text = "已恢复默认 LB + RB";
+            SetStatus("已恢复默认 LB + RB", error: false);
             e.Handled = true;
             return;
         }
@@ -276,7 +280,10 @@ public partial class MainWindow : Window
     {
         Dispatcher.Invoke(() =>
         {
-            TxtGamepad.Text = status.Connected ? $"已连接：{status.Name}" : "未连接";
+            TxtGamepad.Text = status.Connected
+                ? (status.Name ?? "手柄已连接")
+                : "手柄未连接";
+
             if (_recording)
             {
                 if (status.ButtonsPressed.Count > 0)
@@ -287,10 +294,13 @@ public partial class MainWindow : Window
                 return;
             }
 
+            // keep hotkey summary visible while connected/disconnected
+            if (!_recording) UpdateHotkeyText();
+
             if (!edge) return;
             if (!_speed.State.Attached)
             {
-                TxtStatus.Text = "手柄触发：请先附加进程";
+                SetStatus("请先附加目标进程", error: true);
                 return;
             }
             try
@@ -300,12 +310,12 @@ public partial class MainWindow : Window
                 _settings.Enabled = next;
                 SettingsService.Save(_settings);
                 ChkEnable.IsChecked = next;
-                TxtStatus.Text = "手柄切换 · " + st.Message;
                 UpdateSpeedState();
+                SetStatus("手柄切换 · " + st.Message, error: false);
             }
             catch (Exception ex)
             {
-                ShowError(ex.Message);
+                SetStatus(ex.Message, error: true);
             }
         });
     }
@@ -315,12 +325,14 @@ public partial class MainWindow : Window
         if (_recording)
         {
             TxtHotkey.Text = _recorded.Count == 0
-                ? "录制中：等待按键…"
-                : "录制中：" + GamepadService.FormatHotkey(_recorded) + "（再点修改保存）";
+                ? "录制中…"
+                : GamepadService.FormatHotkey(_recorded) + " · 再点保存";
+            BtnHotkey.Content = "保存";
         }
         else
         {
-            TxtHotkey.Text = "切换键：" + GamepadService.FormatHotkey(_settings.HotkeyButtons);
+            TxtHotkey.Text = GamepadService.FormatHotkey(_settings.HotkeyButtons);
+            BtnHotkey.Content = "改键";
         }
     }
 
@@ -331,17 +343,14 @@ public partial class MainWindow : Window
         TxtSpeedState.Text = $"当前：{sp:0.###}x · {(en ? "已启用" : "未启用")}";
     }
 
-    private void ShowError(string msg)
+    /// <summary>
+    /// Fixed bottom status only — never inserts banners that reflow the page.
+    /// </summary>
+    private void SetStatus(string msg, bool error)
     {
-        BannerError.Visibility = Visibility.Visible;
-        TxtError.Text = msg;
-        TxtStatus.Text = "错误";
-    }
-
-    private void ClearError()
-    {
-        BannerError.Visibility = Visibility.Collapsed;
-        TxtError.Text = "";
+        TxtStatus.Text = msg;
+        TxtStatus.Foreground = error
+            ? (_statusErrorBrush ?? Brushes.IndianRed)
+            : (_statusNormalBrush ?? Brushes.Gray);
     }
 }
-
