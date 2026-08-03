@@ -27,8 +27,6 @@ FastMode adds its own application-level integration and extensions, including:
 - Pitch-preserving time stretching with SoundTouch
 - Windows `PerMonitorV2` multi-display DPI support
 
-**FastMode is unrelated to Cheat Engine: it is not an official Cheat Engine project, is not maintained or endorsed by it, and contains no Cheat Engine code.**
-
 ## Current Status
 
 | Item | Status |

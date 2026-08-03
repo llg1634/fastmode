@@ -24,8 +24,6 @@ FastMode 的扩展功能包括：
 - SoundTouch 保持音调的时间伸缩
 - Windows `PerMonitorV2` 多显示器高 DPI 适配
 
-**FastMode 与 Cheat Engine 无关：不是 Cheat Engine 官方项目，不受其维护或背书，也不包含其代码。**
-
 ## 当前状态
 
 | 项目 | 状态 |
