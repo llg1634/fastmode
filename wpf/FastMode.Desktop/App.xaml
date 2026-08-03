@@ -4,6 +4,10 @@
              StartupUri="MainWindow.xaml">
   <Application.Resources>
     <ResourceDictionary>
+      <ResourceDictionary.MergedDictionaries>
+        <ResourceDictionary Source="Resources/Strings.zh-CN.xaml"/>
+      </ResourceDictionary.MergedDictionaries>
+
       <!-- Green design language (product requirement), scaled like a real token set -->
       <Color x:Key="ColorObject1">#1F3B2E</Color>
       <Color x:Key="ColorObject2">#2F7A52</Color>
@@ -204,7 +208,9 @@
           <Setter.Value>
             <ControlTemplate TargetType="CheckBox">
               <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                <Border x:Name="track" Width="36" Height="18" CornerRadius="9" Background="#55FFFFFF" VerticalAlignment="Center">
+                <Border x:Name="track" Width="36" Height="18" CornerRadius="9"
+                        Background="#55FFFFFF" BorderBrush="#B7D9C6" BorderThickness="1"
+                        VerticalAlignment="Center">
                   <Ellipse x:Name="thumb" Width="14" Height="14" Fill="White" HorizontalAlignment="Left" Margin="2,0,0,0"/>
                 </Border>
                 <ContentPresenter Margin="8,0,0,0" VerticalAlignment="Center"
@@ -213,6 +219,7 @@
               <ControlTemplate.Triggers>
                 <Trigger Property="IsChecked" Value="True">
                   <Setter TargetName="track" Property="Background" Value="#EEFFFFFF"/>
+                  <Setter TargetName="track" Property="BorderBrush" Value="{StaticResource ColorBrush3}"/>
                   <Setter TargetName="thumb" Property="Fill" Value="{StaticResource ColorBrush3}"/>
                   <Setter TargetName="thumb" Property="HorizontalAlignment" Value="Right"/>
                   <Setter TargetName="thumb" Property="Margin" Value="0,0,2,0"/>
@@ -281,6 +288,12 @@
             </ControlTemplate>
           </Setter.Value>
         </Setter>
+      </Style>
+
+      <Style x:Key="KeyboardKey" TargetType="Button" BasedOn="{StaticResource PadKey}">
+        <Setter Property="Width" Value="44"/>
+        <Setter Property="Height" Value="30"/>
+        <Setter Property="Margin" Value="0,0,7,7"/>
       </Style>
     </ResourceDictionary>
   </Application.Resources>

@@ -16,6 +16,15 @@ public sealed class ProcessItem
         $"{Name}  ·  PID {Pid}  ·  {Arch}";
 }
 
+[Flags]
+public enum ShortcutModifiers
+{
+    None = 0,
+    Control = 1,
+    Shift = 2,
+    Alt = 4
+}
+
 public sealed class AppSettings
 {
     public bool AlwaysOnTop { get; set; }
@@ -23,6 +32,8 @@ public sealed class AppSettings
     public float CurrentSpeed { get; set; } = 2f;
     public bool Enabled { get; set; }
     public List<int> HotkeyButtons { get; set; } = new() { 4, 5 };
+    public ShortcutModifiers KeyboardModifiers { get; set; } = ShortcutModifiers.Control;
+    public int KeyboardKey { get; set; } = 0x46;
     public string? LastProcessName { get; set; }
     public bool FloatingEnabled { get; set; }
 }
@@ -35,5 +46,5 @@ public sealed class AttachInfo
     public string? Arch { get; set; }
     public bool Enabled { get; set; }
     public float Speed { get; set; } = 1f;
-    public string Message { get; set; } = "未附加";
+    public string Message { get; set; } = "";
 }

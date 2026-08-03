@@ -14,11 +14,14 @@ public partial class MainWindow : Window
 {
     private readonly SpeedhackService _speed = new();
     private readonly GamepadService _pad = new();
+    private readonly KeyboardHotkeyService _keyboard = new();
     private AppSettings _settings = SettingsService.Load();
     private DispatcherTimer? _searchTimer;
     private Brush? _statusNormalBrush;
     private Brush? _statusErrorBrush;
     private OverlayWindow? _overlay;
+    private GamepadStatus _lastGamepadStatus = new();
+    private bool _suppressEnableEvent;
 
     public MainWindow()
     {
@@ -28,6 +31,7 @@ public partial class MainWindow : Window
         Closed += (_, _) =>
         {
             _pad.Dispose();
+            _keyboard.Dispose();
             _speed.Dispose();
             CloseOverlay();
         };
@@ -49,11 +53,20 @@ public partial class MainWindow : Window
         RefreshProcesses();
         UpdateHotkeyText();
         UpdateSpeedState();
-        SetStatus("就绪", error: false);
+        SetStatus(LocalizationService.Get("L10n.Ready"), error: false);
         ApplyOverlayState();
 
         _pad.Updated += OnGamepadUpdated;
         _pad.Start(() => _settings.HotkeyButtons);
+        _keyboard.Triggered += OnKeyboardTriggered;
+        try
+        {
+            _keyboard.Start(() => (_settings.KeyboardModifiers, _settings.KeyboardKey));
+        }
+        catch (Exception ex)
+        {
+            SetStatus(ex.Message, error: true);
+        }
     }
 
     #region window chrome
@@ -65,6 +78,13 @@ public partial class MainWindow : Window
 
     private void BtnMin_Click(object sender, RoutedEventArgs e) => WindowState = WindowState.Minimized;
     private void BtnClose_Click(object sender, RoutedEventArgs e) => Close();
+
+    private void BtnLanguage_Click(object sender, RoutedEventArgs e)
+    {
+        LocalizationService.Toggle();
+        UpdateLocalizedStateTexts();
+        SetStatus(LocalizationService.Get("L10n.LanguageChanged"), error: false);
+    }
 
     private void Resize_MouseDown(object sender, MouseButtonEventArgs e)
     {
@@ -139,7 +159,7 @@ public partial class MainWindow : Window
     {
         if (ListProcesses.SelectedItem is not ProcessItem item)
         {
-            SetStatus("请先选择一个进程", error: true);
+            SetStatus(LocalizationService.Get("L10n.SelectProcess"), error: true);
             return;
         }
         try
@@ -149,7 +169,7 @@ public partial class MainWindow : Window
             _settings.Enabled = false;
             SettingsService.Save(_settings);
             TxtAttach.Text = st.Message;
-            ChkEnable.IsChecked = false;
+            SetEnableCheck(false);
             UpdateSpeedState();
             SyncOverlay();
             SetStatus(st.Message, error: false);
@@ -165,7 +185,7 @@ public partial class MainWindow : Window
         var st = _speed.Detach();
         _settings.Enabled = false;
         SettingsService.Save(_settings);
-        ChkEnable.IsChecked = false;
+        SetEnableCheck(false);
         TxtAttach.Text = st.Message;
         UpdateSpeedState();
         SyncOverlay();
@@ -174,27 +194,21 @@ public partial class MainWindow : Window
 
     private void ChkEnable_Changed(object sender, RoutedEventArgs e)
     {
-        if (!IsLoaded) return;
+        if (!IsLoaded || _suppressEnableEvent) return;
         try
         {
             if (!_speed.State.Attached)
             {
-                ChkEnable.IsChecked = false;
-                SetStatus("请先附加目标进程", error: true);
+                SetEnableCheck(false);
+                SetStatus(LocalizationService.Get("L10n.AttachTargetFirst"), error: true);
                 SyncOverlay();
                 return;
             }
-            var enabled = ChkEnable.IsChecked == true;
-            var st = _speed.SetSpeed(_settings.CurrentSpeed, enabled);
-            _settings.Enabled = enabled;
-            SettingsService.Save(_settings);
-            UpdateSpeedState();
-            SyncOverlay();
-            SetStatus(st.Message, error: false);
+            SetAccelerationEnabled(ChkEnable.IsChecked == true);
         }
         catch (Exception ex)
         {
-            ChkEnable.IsChecked = false;
+            SetEnableCheck(false);
             SyncOverlay();
             SetStatus(ex.Message, error: true);
         }
@@ -206,7 +220,8 @@ public partial class MainWindow : Window
         _settings.FloatingEnabled = ChkFloating.IsChecked == true;
         SettingsService.Save(_settings);
         ApplyOverlayState();
-        SetStatus(_settings.FloatingEnabled ? "悬浮窗已开启" : "悬浮窗已关闭", error: false);
+        SetStatus(LocalizationService.Get(
+            _settings.FloatingEnabled ? "L10n.FloatingEnabled" : "L10n.FloatingDisabled"), error: false);
     }
 
     private void ApplyOverlayState()
@@ -225,8 +240,6 @@ public partial class MainWindow : Window
 
     private void SyncOverlay()
     {
-        _overlay?.SetEnabledState(_settings.Enabled && _speed.State.Attached && _speed.State.Enabled);
-        // use settings.Enabled after attach semantics: show On only when speedhack actively enabled
         var on = ChkEnable.IsChecked == true && _speed.State.Attached;
         _overlay?.SetEnabledState(on);
     }
@@ -242,7 +255,7 @@ public partial class MainWindow : Window
     {
         if (!float.TryParse(TxtCustomSpeed.Text, out var speed))
         {
-            SetStatus("倍速必须是数字", error: true);
+            SetStatus(LocalizationService.Get("L10n.SpeedMustBeNumber"), error: true);
             return;
         }
         ApplySpeed(speed);
@@ -260,7 +273,7 @@ public partial class MainWindow : Window
                 var st = _speed.SetSpeed(speed, _settings.Enabled);
                 SetStatus(st.Message, error: false);
             }
-            else SetStatus($"已记录倍速 {speed:0.###}x（尚未附加）", error: false);
+            else SetStatus(LocalizationService.Format("L10n.SavedSpeedTemplate", speed), error: false);
             RebuildPresets();
             UpdateSpeedState();
         }
@@ -280,13 +293,24 @@ public partial class MainWindow : Window
 
     private void BtnSettings_Click(object sender, RoutedEventArgs e)
     {
-        var win = new SettingsWindow(_settings.HotkeyButtons) { Owner = this };
+        var win = new SettingsWindow(
+            _settings.HotkeyButtons,
+            _settings.KeyboardModifiers,
+            _settings.KeyboardKey) { Owner = this };
         if (win.ShowDialog() == true)
         {
+            var oldKeyboard = KeyboardHotkeyService.FormatHotkey(_settings.KeyboardModifiers, _settings.KeyboardKey);
             _settings.HotkeyButtons = win.ResultHotkeys;
+            _settings.KeyboardModifiers = win.ResultKeyboardModifiers;
+            _settings.KeyboardKey = win.ResultKeyboardKey;
             SettingsService.Save(_settings);
             UpdateHotkeyText();
-            SetStatus("手柄快捷键已更新：" + GamepadService.FormatHotkey(_settings.HotkeyButtons), error: false);
+            var newGamepad = GamepadService.FormatHotkey(_settings.HotkeyButtons);
+            var newKeyboard = KeyboardHotkeyService.FormatHotkey(_settings.KeyboardModifiers, _settings.KeyboardKey);
+            var key = oldKeyboard != newKeyboard
+                ? "L10n.KeyboardShortcutUpdatedTemplate"
+                : "L10n.ControllerShortcutUpdatedTemplate";
+            SetStatus(LocalizationService.Format(key, oldKeyboard != newKeyboard ? newKeyboard : newGamepad), error: false);
         }
     }
 
@@ -294,31 +318,15 @@ public partial class MainWindow : Window
     {
         Dispatcher.Invoke(() =>
         {
-            TxtGamepad.Text = status.Connected ? (status.Name ?? "手柄已连接") : "手柄未连接";
+            _lastGamepadStatus = status;
+            UpdateGamepadStatus();
             UpdateHotkeyText();
             if (!edge) return;
-            if (!_speed.State.Attached)
-            {
-                SetStatus("请先附加目标进程", error: true);
-                return;
-            }
-            try
-            {
-                var next = !_settings.Enabled;
-                var st = _speed.SetSpeed(_settings.CurrentSpeed, next);
-                _settings.Enabled = next;
-                SettingsService.Save(_settings);
-                ChkEnable.IsChecked = next;
-                UpdateSpeedState();
-                SyncOverlay();
-                SetStatus("手柄切换 · " + st.Message, error: false);
-            }
-            catch (Exception ex)
-            {
-                SetStatus(ex.Message, error: true);
-            }
+            ToggleAcceleration("L10n.ControllerTogglePrefix");
         });
     }
+
+    private void OnKeyboardTriggered() => ToggleAcceleration("L10n.KeyboardTogglePrefix");
 
     private void UpdateHotkeyText()
     {
@@ -329,7 +337,68 @@ public partial class MainWindow : Window
     {
         var sp = _settings.CurrentSpeed;
         var en = _settings.Enabled && _speed.State.Attached;
-        TxtSpeedState.Text = $"当前：{sp:0.###}x · {(en ? "已启用" : "未启用")}";
+        TxtSpeedState.Text = LocalizationService.Format(
+            "L10n.CurrentSpeedTemplate",
+            sp,
+            LocalizationService.Get(en ? "L10n.EnabledState" : "L10n.DisabledState"));
+    }
+
+    private void UpdateGamepadStatus()
+    {
+        TxtGamepad.Text = _lastGamepadStatus.Connected
+            ? (_lastGamepadStatus.Name ?? LocalizationService.Get("L10n.GamepadConnected"))
+            : LocalizationService.Get("L10n.GamepadDisconnected");
+    }
+
+    private void UpdateLocalizedStateTexts()
+    {
+        UpdateGamepadStatus();
+        UpdateHotkeyText();
+        UpdateSpeedState();
+        TxtAttach.Text = _speed.State.Attached
+            ? LocalizationService.Format("L10n.AttachedTemplate", _speed.State.Name ?? "", _speed.State.Arch ?? "")
+            : LocalizationService.Get("L10n.NotAttached");
+    }
+
+    private void ToggleAcceleration(string sourceKey)
+    {
+        if (!_speed.State.Attached)
+        {
+            SetStatus(LocalizationService.Get("L10n.AttachTargetFirst"), error: true);
+            return;
+        }
+
+        try
+        {
+            SetAccelerationEnabled(!_settings.Enabled, sourceKey);
+        }
+        catch (Exception ex)
+        {
+            SetEnableCheck(false);
+            SyncOverlay();
+            SetStatus(ex.Message, error: true);
+        }
+    }
+
+    private void SetAccelerationEnabled(bool enabled, string? sourceKey = null)
+    {
+        var state = _speed.SetSpeed(_settings.CurrentSpeed, enabled);
+        _settings.Enabled = enabled;
+        SettingsService.Save(_settings);
+        SetEnableCheck(enabled);
+        UpdateSpeedState();
+        SyncOverlay();
+        var message = sourceKey == null
+            ? state.Message
+            : LocalizationService.Get(sourceKey) + " · " + state.Message;
+        SetStatus(message, error: false);
+    }
+
+    private void SetEnableCheck(bool enabled)
+    {
+        _suppressEnableEvent = true;
+        ChkEnable.IsChecked = enabled;
+        _suppressEnableEvent = false;
     }
 
     private void SetStatus(string msg, bool error)

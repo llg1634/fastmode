@@ -4,14 +4,14 @@
   <img src="./assets/FastMode.png" width="128" alt="FastMode icon">
   <h1>FastMode</h1>
   <p><strong>A lightweight process speed controller for Windows x64 applications.</strong></p>
-  <p>Native WPF UI · Controller hotkeys · Synchronized audio speed · Per-Monitor V2 DPI</p>
+  <p>Native WPF UI · Controller and keyboard shortcuts · Chinese/English switching · Synchronized audio speed</p>
 </div>
 
 ## Overview
 
-FastMode packages process speed control into a standalone Windows desktop application. It lists applications with visible top-level windows, lets the user select a target, configure a preset or custom multiplier, and toggle acceleration from either the UI or a controller shortcut.
+FastMode packages process speed control into a standalone Windows desktop application. It lists applications with visible top-level windows, lets the user select a target, configure a preset or custom multiplier, and toggle acceleration from the UI, a controller shortcut, or a global keyboard shortcut.
 
-The current desktop application is built with native WPF and does not depend on a local web server or browser port. It uses a green visual language, a custom rounded window shell, and Per-Monitor V2 DPI awareness for sharp rendering across displays with different scaling factors.
+The current desktop application is built with native WPF and does not depend on a local web server or browser port. It uses a green visual language, a custom rounded window shell, and Per-Monitor V2 DPI awareness for sharp rendering across displays with different scaling factors. Simplified Chinese is used by default; click the language button at the top of the window to switch between Chinese and English at runtime.
 
 ## Cheat Engine Reference Implementation
 
@@ -38,13 +38,13 @@ FastMode adds its own application-level integration and extensions, including:
 
 | Item | Status |
 |---|---|
-| Current version | `v0.2.0 Preview` |
+| Current version | `v0.3.0 Preview` |
 | Operating system | Windows 10 / Windows 11 |
 | Architecture | x64 |
-| UI language | Simplified Chinese |
+| UI language | Simplified Chinese / English (Chinese by default) |
 | Main UI | Native WPF |
 | DPI awareness | Per-Monitor V2 |
-| Public release | Not published |
+| Public release | `v0.2.0 Preview` published; `v0.3.0 Preview` package prepared |
 
 ## Features
 
@@ -54,6 +54,9 @@ FastMode adds its own application-level integration and extensions, including:
 - Toggles acceleration through the main UI.
 - Uses `LB + RB` as the default controller shortcut.
 - Allows controller-button combinations to be changed from the settings window.
+- Uses `Ctrl + F` as the default global keyboard shortcut without swallowing normal keyboard input.
+- Allows the keyboard shortcut to be configured visually in Settings; the combination must include `Ctrl`, `Shift`, or `Alt`.
+- Supports runtime Chinese/English switching from the language button at the top of the window.
 - Supports an always-on-top main window and an optional compact status overlay.
 - Synchronizes target audio with the selected multiplier by default, without a separate audio toggle.
 - Re-renders cleanly when moved between displays with different DPI scaling.
@@ -69,8 +72,10 @@ FastMode adds its own application-level integration and extensions, including:
 3. Select the target application from the process list.
 4. Click the attach button.
 5. Select a preset multiplier, or enter a custom value and apply it.
-6. Turn on acceleration from the UI, or press the default `LB + RB` controller shortcut.
+6. Turn on acceleration from the UI, press the default `LB + RB` controller shortcut, or press the default `Ctrl + F` keyboard shortcut.
 7. Disable acceleration or detach from the target before closing FastMode.
+
+To use the English interface, click the language button immediately to the left of the topmost switch. FastMode starts in Simplified Chinese on every launch.
 
 If the target application runs as administrator, FastMode will usually need to run with equal or higher privileges.
 
@@ -93,7 +98,7 @@ Applications use different audio engines, sample formats, and submission models.
 
 ## Version and Development Status
 
-The current review build is `v0.2.0 Preview`, and its main features are still being verified against real target applications.
+The current review build is `v0.3.0 Preview`, and its main features are still being verified against real target applications.
 
 - The native WPF desktop application is the active development line.
 - The Tauri/Web UI remains in the repository as an earlier implementation.

@@ -28,15 +28,24 @@ public sealed class GamepadService : IDisposable
         [0] = "A", [1] = "B", [2] = "X", [3] = "Y",
         [4] = "LB", [5] = "RB", [6] = "LT", [7] = "RT",
         [8] = "Back", [9] = "Start", [10] = "L3", [11] = "R3",
-        [12] = "上", [13] = "下", [14] = "左", [15] = "右", [16] = "Guide"
+        [12] = "Up", [13] = "Down", [14] = "Left", [15] = "Right", [16] = "Guide"
     };
 
     public static string FormatHotkey(IEnumerable<int> buttons)
     {
         var list = buttons.ToList();
-        if (list.Count == 0) return "未设置";
-        return string.Join(" + ", list.Select(b => ButtonNames.TryGetValue(b, out var n) ? n : $"#{b}"));
+        if (list.Count == 0) return LocalizationService.Get("L10n.NotSet");
+        return string.Join(" + ", list.Select(FormatButton));
     }
+
+    private static string FormatButton(int button) => button switch
+    {
+        12 => LocalizationService.Get("L10n.DirectionUp"),
+        13 => LocalizationService.Get("L10n.DirectionDown"),
+        14 => LocalizationService.Get("L10n.DirectionLeft"),
+        15 => LocalizationService.Get("L10n.DirectionRight"),
+        _ => ButtonNames.TryGetValue(button, out var name) ? name : "#" + button
+    };
 
     public void Start(Func<IReadOnlyList<int>> getHotkey)
     {
@@ -85,7 +94,7 @@ public sealed class GamepadService : IDisposable
                 return (new GamepadStatus
                 {
                     Connected = true,
-                    Name = $"XInput Controller #{i}",
+                    Name = LocalizationService.Format("L10n.ControllerNameTemplate", i),
                     ButtonsPressed = pressed
                 }, pressed);
             }

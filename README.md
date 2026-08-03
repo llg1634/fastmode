@@ -1,17 +1,17 @@
-FastMode is a lightweight native process speed controller for Windows x64 applications, featuring visible-window target selection, preset and custom multipliers, synchronized audio acceleration, XInput controller hotkeys, and Per-Monitor V2 DPI support. Its process-speed core is based on and references the Cheat Engine Speedhack implementation. For the full English documentation, see [README_EN.md](./README_EN.md).
+FastMode is a lightweight native process speed controller for Windows x64 applications, featuring visible-window target selection, preset and custom multipliers, synchronized audio acceleration, XInput controller hotkeys, configurable global keyboard shortcuts, Chinese/English runtime switching, and Per-Monitor V2 DPI support. Its process-speed core is based on and references the Cheat Engine Speedhack implementation. English mode is built in and can be selected at runtime; for the full English documentation, see [README_EN.md](./README_EN.md).
 
 <div align="center">
   <img src="./assets/FastMode.png" width="128" alt="FastMode 图标">
   <h1>FastMode</h1>
   <p>面向 Windows x64 应用的轻量级进程倍速控制工具。</p>
-  <p>原生 WPF 界面 · 手柄快捷键 · 音频同步加速 · Per-Monitor V2 高 DPI</p>
+  <p>原生 WPF 界面 · 手柄与键盘快捷键 · 中英文切换 · 音频同步加速</p>
 </div>
 
 ## 项目简介
 
-FastMode 将进程倍速控制整理为一个独立的 Windows 桌面程序。用户可以从具有可见前台窗口的应用列表中选择目标，设置预设或自定义倍速，并通过界面开关或手柄组合键快速启停。
+FastMode 将进程倍速控制整理为一个独立的 Windows 桌面程序。用户可以从具有可见前台窗口的应用列表中选择目标，设置预设或自定义倍速，并通过界面开关、手柄组合键或全局键盘快捷键快速启停。
 
-项目使用原生 WPF 构建，不依赖本地 Web 服务或浏览器端口。界面采用绿色设计语言、自绘圆角窗口壳，并支持在不同 DPI 的显示器之间动态切换和重新渲染。
+项目使用原生 WPF 构建，不依赖本地 Web 服务或浏览器端口。界面采用绿色设计语言、自绘圆角窗口壳，并支持在不同 DPI 的显示器之间动态切换和重新渲染。程序默认使用简体中文，点击窗口顶部的中英文切换按钮即可在中文和英文之间即时切换。
 
 ## Cheat Engine 参考实现
 
@@ -38,13 +38,13 @@ FastMode 在此基础上进行了独立封装与扩展，包括：
 
 | 项目 | 状态 |
 |---|---|
-| 当前版本 | `v0.2.0 Preview` |
+| 当前版本 | `v0.3.0 Preview` |
 | 操作系统 | Windows 10 / Windows 11 |
 | 架构 | x64 |
-| 界面语言 | 简体中文 |
+| 界面语言 | 简体中文 / English（默认中文） |
 | 主界面 | 原生 WPF |
 | DPI | Per-Monitor V2 |
-| 公开下载 | 尚未发布 |
+| 公开下载 | `v0.2.0 Preview` 已发布；`v0.3.0 Preview` 发布包已准备 |
 
 ## 主要功能
 
@@ -54,6 +54,9 @@ FastMode 在此基础上进行了独立封装与扩展，包括：
 - 使用界面开关启用或关闭倍速。
 - 默认使用 `LB + RB` 手柄组合键切换倍速状态。
 - 支持在设置页直接选择新的手柄按键组合。
+- 默认使用 `Ctrl + F` 全局键盘快捷键切换倍速状态，不会拦截原有键盘输入。
+- 支持在设置页通过可视化按键选择修改键盘快捷键；组合必须包含 `Ctrl`、`Shift` 或 `Alt`。
+- 支持运行时中英文切换；点击窗口顶部的语言按钮即可切换。
 - 支持主窗口置顶和可选的小型置顶状态悬浮窗。
 - 启用倍速时默认同步处理目标音频，不提供单独的音频开关。
 - 支持跨不同缩放比例的显示器移动，保持文字、图标和圆角边框清晰。
@@ -69,8 +72,10 @@ FastMode 在此基础上进行了独立封装与扩展，包括：
 3. 在“目标进程”列表中选择需要控制的应用。
 4. 点击“附加”。
 5. 选择预设倍速，或输入自定义倍率后点击“应用”。
-6. 打开“启用”开关，或按下默认手柄快捷键 `LB + RB`。
+6. 打开“启用”开关，按下默认手柄快捷键 `LB + RB`，或按下默认键盘快捷键 `Ctrl + F`。
 7. 不再使用时先关闭倍速或断开目标，然后退出 FastMode。
+
+需要英文界面时，点击窗口顶部、置顶开关左侧的语言按钮即可切换；程序每次启动默认进入中文界面。
 
 如果目标程序以管理员权限运行，FastMode 通常也需要使用相同或更高权限启动。
 
@@ -93,7 +98,7 @@ FastMode 在此基础上进行了独立封装与扩展，包括：
 
 ## 版本与开发状态
 
-当前审核版本为 `v0.2.0 Preview`，主要功能仍在实际目标程序中持续验证。
+当前审核版本为 `v0.3.0 Preview`，主要功能仍在实际目标程序中持续验证。
 
 - 桌面端以 WPF 原生版本为当前主线。
 - 仓库中的 Tauri/Web UI 仅作为早期实现保留。

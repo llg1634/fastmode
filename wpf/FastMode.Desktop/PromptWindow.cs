@@ -1,5 +1,6 @@
 using System.Windows.Controls;
 using System.Windows;
+using FastMode.Services;
 
 namespace FastMode;
 
@@ -30,8 +31,8 @@ public partial class PromptWindow : Window
             Visibility = extra == null ? Visibility.Collapsed : Visibility.Visible
         };
         var buttons = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right };
-        var ok = new Button { Content = "保存", Width = 88, Margin = new Thickness(0, 0, 8, 0), IsDefault = true };
-        var cancel = new Button { Content = "取消", Width = 88, IsCancel = true };
+        var ok = new Button { Content = LocalizationService.Get("L10n.Save"), Width = 88, Margin = new Thickness(0, 0, 8, 0), IsDefault = true };
+        var cancel = new Button { Content = LocalizationService.Get("L10n.Cancel"), Width = 88, IsCancel = true };
         ok.Click += (_, _) => { DialogResult = true; Close(); };
         cancel.Click += (_, _) => { DialogResult = false; Close(); };
         buttons.Children.Add(ok);

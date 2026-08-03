@@ -40,27 +40,31 @@
 
             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
               <TextBlock Text="FastMode" Foreground="White" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center"/>
-              <TextBlock Text="加速" Foreground="#CCFFFFFF" FontSize="12" Margin="10,2,0,0" VerticalAlignment="Center"/>
+              <TextBlock Text="{DynamicResource L10n.AppSubtitle}" Foreground="#CCFFFFFF" FontSize="12" Margin="10,2,0,0" VerticalAlignment="Center"/>
             </StackPanel>
 
             <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,8,0">
-              <CheckBox x:Name="ChkTopmost" Style="{StaticResource MiniSwitch}" Content="置顶" Margin="0,0,14,0"
+              <Button x:Name="BtnLanguage" Content="{DynamicResource L10n.LanguageButton}"
+                      ToolTip="{DynamicResource L10n.LanguageTooltip}"
+                      Style="{StaticResource TitleIconButton}" Foreground="White" FontWeight="SemiBold"
+                      Margin="0,0,10,0" Click="BtnLanguage_Click"/>
+              <CheckBox x:Name="ChkTopmost" Style="{StaticResource MiniSwitch}" Content="{DynamicResource L10n.Topmost}" Margin="0,0,14,0"
                         Checked="ChkTopmost_Changed" Unchecked="ChkTopmost_Changed"/>
               <Border Background="#22FFFFFF" CornerRadius="8" Padding="10,4" Margin="0,0,8,0">
                 <StackPanel>
-                  <TextBlock x:Name="TxtGamepad" Text="手柄未连接" Foreground="#E6FFFFFF" FontSize="11"/>
+                  <TextBlock x:Name="TxtGamepad" Text="{DynamicResource L10n.GamepadDisconnected}" Foreground="#E6FFFFFF" FontSize="11"/>
                   <TextBlock x:Name="TxtHotkey" Text="LB + RB" Foreground="White" FontSize="11" FontWeight="SemiBold"/>
                 </StackPanel>
               </Border>
-              <Button x:Name="BtnSettings" Content="设置" Style="{StaticResource TitleIconButton}" Width="Auto" Padding="10,0"
+              <Button x:Name="BtnSettings" Content="{DynamicResource L10n.Settings}" Style="{StaticResource TitleIconButton}" Width="Auto" Padding="10,0"
                       Foreground="White" Click="BtnSettings_Click" FontSize="12"/>
             </StackPanel>
 
             <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
-              <Button x:Name="BtnMin" Style="{StaticResource TitleIconButton}" Click="BtnMin_Click" ToolTip="最小化">
+              <Button x:Name="BtnMin" Style="{StaticResource TitleIconButton}" Click="BtnMin_Click" ToolTip="{DynamicResource L10n.Minimize}">
                 <Path Stroke="White" StrokeThickness="1.6" Data="M4,14 H18" Width="14" Height="14" Stretch="Uniform"/>
               </Button>
-              <Button x:Name="BtnClose" Style="{StaticResource TitleIconButton}" Margin="0" Click="BtnClose_Click" ToolTip="关闭">
+              <Button x:Name="BtnClose" Style="{StaticResource TitleIconButton}" Margin="0" Click="BtnClose_Click" ToolTip="{DynamicResource L10n.Close}">
                 <Path Stroke="White" StrokeThickness="1.6" Data="M4,4 L14,14 M14,4 L4,14" Width="12" Height="12" Stretch="Uniform"/>
               </Button>
             </StackPanel>
@@ -86,12 +90,12 @@
               </Grid.RowDefinitions>
 
               <DockPanel>
-                <Button DockPanel.Dock="Right" Style="{StaticResource GhostButton}" Content="刷新" Click="BtnRefresh_Click"/>
-                <TextBlock Text="目标进程" FontWeight="SemiBold" FontSize="14" Foreground="{StaticResource ColorBrush1}" VerticalAlignment="Center"/>
+                <Button DockPanel.Dock="Right" Style="{StaticResource GhostButton}" Content="{DynamicResource L10n.Refresh}" Click="BtnRefresh_Click"/>
+                <TextBlock Text="{DynamicResource L10n.TargetProcess}" FontWeight="SemiBold" FontSize="14" Foreground="{StaticResource ColorBrush1}" VerticalAlignment="Center"/>
               </DockPanel>
 
               <TextBox Grid.Row="1" x:Name="TxtSearch" Style="{StaticResource FieldTextBox}" Margin="0,10,0,8"
-                       TextChanged="TxtSearch_TextChanged" ToolTip="搜索窗口标题 / 进程名"/>
+                       TextChanged="TxtSearch_TextChanged" ToolTip="{DynamicResource L10n.SearchTooltip}"/>
 
               <ListBox Grid.Row="2" x:Name="ListProcesses"
                        BorderBrush="#B7D9C6" BorderThickness="1"
@@ -145,10 +149,10 @@
               </ListBox>
 
               <DockPanel Grid.Row="3" Margin="0,10,0,0">
-                <Button DockPanel.Dock="Right" Style="{StaticResource GhostButton}" Content="断开" Click="BtnDetach_Click"/>
-                <Button DockPanel.Dock="Right" Style="{StaticResource PrimaryButton}" Content="附加" Margin="0,0,8,0" Click="BtnAttach_Click"/>
+                <Button DockPanel.Dock="Right" Style="{StaticResource GhostButton}" Content="{DynamicResource L10n.Detach}" Click="BtnDetach_Click"/>
+                <Button DockPanel.Dock="Right" Style="{StaticResource PrimaryButton}" Content="{DynamicResource L10n.Attach}" Margin="0,0,8,0" Click="BtnAttach_Click"/>
                 <TextBlock x:Name="TxtAttach" Foreground="{StaticResource ColorBrushGray3}" VerticalAlignment="Center"
-                           Text="未附加" TextTrimming="CharacterEllipsis"/>
+                           Text="{DynamicResource L10n.NotAttached}" TextTrimming="CharacterEllipsis"/>
               </DockPanel>
             </Grid>
           </Border>
@@ -157,28 +161,28 @@
           <Border Grid.Column="2" Style="{StaticResource CardBorder}">
             <StackPanel>
               <DockPanel>
-                <CheckBox x:Name="ChkEnable" DockPanel.Dock="Right" Style="{StaticResource MiniSwitch}" Content="启用"
+                <CheckBox x:Name="ChkEnable" DockPanel.Dock="Right" Style="{StaticResource MiniSwitch}" Content="{DynamicResource L10n.Enable}"
                           Foreground="{StaticResource ColorBrush1}"
                           Checked="ChkEnable_Changed" Unchecked="ChkEnable_Changed"/>
-                <TextBlock Text="加速" FontWeight="SemiBold" FontSize="14" Foreground="{StaticResource ColorBrush1}" VerticalAlignment="Center"/>
+                <TextBlock Text="{DynamicResource L10n.Acceleration}" FontWeight="SemiBold" FontSize="14" Foreground="{StaticResource ColorBrush1}" VerticalAlignment="Center"/>
               </DockPanel>
 
-              <TextBlock Text="倍速" Foreground="{StaticResource ColorBrushGray3}" Margin="0,16,0,8" FontSize="12"/>
+              <TextBlock Text="{DynamicResource L10n.Multiplier}" Foreground="{StaticResource ColorBrushGray3}" Margin="0,16,0,8" FontSize="12"/>
               <WrapPanel x:Name="PanelPresets"/>
               <DockPanel Margin="0,4,0,0">
-                <Button DockPanel.Dock="Right" Style="{StaticResource PrimaryButton}" Content="应用" Click="BtnApplySpeed_Click"/>
+                <Button DockPanel.Dock="Right" Style="{StaticResource PrimaryButton}" Content="{DynamicResource L10n.Apply}" Click="BtnApplySpeed_Click"/>
                 <TextBox x:Name="TxtCustomSpeed" Style="{StaticResource FieldTextBox}" Margin="0,0,8,0"/>
               </DockPanel>
               <TextBlock x:Name="TxtSpeedState" Foreground="{StaticResource ColorBrushGray3}" FontSize="12" Margin="0,12,0,0"/>
 
               <Border Margin="0,18,0,0" Padding="12,10" Background="{StaticResource ColorBrush8}" BorderBrush="#B7D9C6" BorderThickness="1" CornerRadius="10">
                 <DockPanel>
-                  <CheckBox x:Name="ChkFloating" DockPanel.Dock="Right" Style="{StaticResource MiniSwitch}" Content="启用"
+                  <CheckBox x:Name="ChkFloating" DockPanel.Dock="Right" Style="{StaticResource MiniSwitch}" Content="{DynamicResource L10n.Enable}"
                             Foreground="{StaticResource ColorBrush1}"
                             Checked="ChkFloating_Changed" Unchecked="ChkFloating_Changed"/>
                   <StackPanel>
-                    <TextBlock Text="悬浮窗" FontWeight="SemiBold" Foreground="{StaticResource ColorBrush1}"/>
-                    <TextBlock Text="36×36 置顶小方块，显示 On / Off" Foreground="{StaticResource ColorBrushGray3}" FontSize="11" Margin="0,2,0,0"/>
+                    <TextBlock Text="{DynamicResource L10n.FloatingWindow}" FontWeight="SemiBold" Foreground="{StaticResource ColorBrush1}"/>
+                    <TextBlock Text="{DynamicResource L10n.FloatingDescription}" Foreground="{StaticResource ColorBrushGray3}" FontSize="11" Margin="0,2,0,0"/>
                   </StackPanel>
                 </DockPanel>
               </Border>
@@ -188,7 +192,7 @@
 
         <!-- Fixed bottom status -->
         <Border Grid.Row="2" Background="{StaticResource ColorBrush8}" BorderBrush="#B7D9C6" BorderThickness="0,1,0,0">
-          <TextBlock x:Name="TxtStatus" Text="就绪" Margin="14,0" VerticalAlignment="Center" FontSize="12"
+          <TextBlock x:Name="TxtStatus" Text="{DynamicResource L10n.Ready}" Margin="14,0" VerticalAlignment="Center" FontSize="12"
                      Foreground="{StaticResource ColorBrushGray3}" TextTrimming="CharacterEllipsis"/>
         </Border>
         </Grid>

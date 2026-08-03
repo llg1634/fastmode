@@ -30,7 +30,12 @@ public static class SettingsService
         {
             if (!File.Exists(PathFile)) return new AppSettings();
             var json = File.ReadAllText(PathFile);
-            return JsonSerializer.Deserialize<AppSettings>(json, JsonOptions) ?? new AppSettings();
+            var settings = JsonSerializer.Deserialize<AppSettings>(json, JsonOptions) ?? new AppSettings();
+            var validModifiers = settings.KeyboardModifiers != ShortcutModifiers.None &&
+                                 (settings.KeyboardModifiers & ~(ShortcutModifiers.Control | ShortcutModifiers.Shift | ShortcutModifiers.Alt)) == 0;
+            if (!validModifiers) settings.KeyboardModifiers = ShortcutModifiers.Control;
+            if (!KeyboardHotkeyService.IsSupportedKey(settings.KeyboardKey)) settings.KeyboardKey = 0x46;
+            return settings;
         }
         catch
         {

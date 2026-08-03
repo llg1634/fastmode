@@ -1,10 +1,10 @@
 <Window x:Class="FastMode.SettingsWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="设置"
+        Title="{DynamicResource L10n.Settings}"
         Icon="Assets/FastMode.ico"
-        Width="760" Height="520"
-        MinWidth="680" MinHeight="460"
+        Width="800" Height="560"
+        MinWidth="720" MinHeight="500"
         WindowStartupLocation="CenterOwner"
         WindowStyle="None"
         AllowsTransparency="True"
@@ -20,103 +20,184 @@
     <Border Background="#69B98A" CornerRadius="14" Padding="2">
       <Border Background="{StaticResource ColorBrushBgContent}" CornerRadius="12" ClipToBounds="True">
         <Grid>
-        <Grid.RowDefinitions>
-          <RowDefinition Height="44"/>
-          <RowDefinition Height="*"/>
-        </Grid.RowDefinitions>
+          <Grid.RowDefinitions>
+            <RowDefinition Height="44"/>
+            <RowDefinition Height="*"/>
+          </Grid.RowDefinitions>
 
-        <Border Background="{StaticResource ColorBrush3}" CornerRadius="12,12,0,0" MouseLeftButtonDown="Title_MouseLeftButtonDown">
-          <Grid Margin="14,0">
-            <TextBlock Text="设置" Foreground="White" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center"/>
-            <Button HorizontalAlignment="Right" Style="{StaticResource TitleIconButton}" Margin="0" Click="BtnClose_Click">
-              <Path Stroke="White" StrokeThickness="1.6" Data="M4,4 L14,14 M14,4 L4,14" Width="12" Height="12" Stretch="Uniform"/>
-            </Button>
-          </Grid>
-        </Border>
-
-        <Grid Grid.Row="1">
-          <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="150"/>
-            <ColumnDefinition Width="*"/>
-          </Grid.ColumnDefinitions>
-
-          <!-- Left nav like PCL -->
-          <Border Background="{StaticResource ColorBrush8}" BorderBrush="#B7D9C6" BorderThickness="0,0,1,0">
-            <StackPanel Margin="10,14,10,14">
-              <RadioButton x:Name="NavHotkey" Content="手柄快捷键" IsChecked="True" GroupName="settingsNav"
-                           Style="{StaticResource SettingsNavItem}" Checked="Nav_Checked" Tag="hotkey"/>
-              <RadioButton x:Name="NavAbout" Content="关于" GroupName="settingsNav"
-                           Style="{StaticResource SettingsNavItem}" Checked="Nav_Checked" Tag="about"/>
-            </StackPanel>
+          <Border Background="{StaticResource ColorBrush3}" CornerRadius="12,12,0,0"
+                  MouseLeftButtonDown="Title_MouseLeftButtonDown">
+            <Grid Margin="14,0">
+              <TextBlock Text="{DynamicResource L10n.Settings}" Foreground="White" FontSize="15"
+                         FontWeight="SemiBold" VerticalAlignment="Center"/>
+              <Button HorizontalAlignment="Right" Style="{StaticResource TitleIconButton}" Margin="0"
+                      ToolTip="{DynamicResource L10n.Close}" Click="BtnClose_Click">
+                <Path Stroke="White" StrokeThickness="1.6" Data="M4,4 L14,14 M14,4 L4,14"
+                      Width="12" Height="12" Stretch="Uniform"/>
+              </Button>
+            </Grid>
           </Border>
 
-          <!-- Right content -->
-          <Grid Grid.Column="1" Margin="18,14,18,16">
-            <Border x:Name="PageHotkey" Style="{StaticResource CardBorder}" VerticalAlignment="Stretch">
-              <Grid>
-                <Grid.RowDefinitions>
-                  <RowDefinition Height="Auto"/>
-                  <RowDefinition Height="*"/>
-                  <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
+          <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="170"/>
+              <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
 
-                <StackPanel>
-                  <TextBlock Text="手柄快捷键" FontSize="15" FontWeight="SemiBold" Foreground="{StaticResource ColorBrush1}"/>
-                  <TextBlock Text="直接点击下方手柄按键进行选择/取消，无需按住实体手柄再点保存。" Foreground="{StaticResource ColorBrushGray3}" FontSize="12" Margin="0,6,0,0" TextWrapping="Wrap"/>
-                  <TextBlock x:Name="TxtSelected" Margin="0,10,0,0" FontWeight="SemiBold" Foreground="{StaticResource ColorBrush2}" Text="已选：LB + RB"/>
-                </StackPanel>
-
-                <!-- Gamepad diagram -->
-                <Viewbox Grid.Row="1" Margin="0,12,0,8" Stretch="Uniform" MaxHeight="280">
-                  <Canvas Width="360" Height="220">
-                    <!-- body -->
-                    <Border Canvas.Left="40" Canvas.Top="50" Width="280" Height="140" CornerRadius="70"
-                            Background="#EEF6F1" BorderBrush="#8FCEB0" BorderThickness="2"/>
-                    <!-- shoulders -->
-                    <Button Canvas.Left="70" Canvas.Top="28" Width="50" Height="22" Content="LB" Tag="4" Click="PadBtn_Click" Style="{StaticResource PadKey}"/>
-                    <Button Canvas.Left="240" Canvas.Top="28" Width="50" Height="22" Content="RB" Tag="5" Click="PadBtn_Click" Style="{StaticResource PadKey}"/>
-                    <Button Canvas.Left="70" Canvas.Top="6" Width="50" Height="18" Content="LT" Tag="6" Click="PadBtn_Click" Style="{StaticResource PadKey}"/>
-                    <Button Canvas.Left="240" Canvas.Top="6" Width="50" Height="18" Content="RT" Tag="7" Click="PadBtn_Click" Style="{StaticResource PadKey}"/>
-                    <!-- face -->
-                    <Button Canvas.Left="250" Canvas.Top="95" Width="28" Height="28" Content="Y" Tag="3" Click="PadBtn_Click" Style="{StaticResource PadKeyRound}"/>
-                    <Button Canvas.Left="278" Canvas.Top="123" Width="28" Height="28" Content="B" Tag="1" Click="PadBtn_Click" Style="{StaticResource PadKeyRound}"/>
-                    <Button Canvas.Left="222" Canvas.Top="123" Width="28" Height="28" Content="X" Tag="2" Click="PadBtn_Click" Style="{StaticResource PadKeyRound}"/>
-                    <Button Canvas.Left="250" Canvas.Top="151" Width="28" Height="28" Content="A" Tag="0" Click="PadBtn_Click" Style="{StaticResource PadKeyRound}"/>
-                    <!-- dpad -->
-                    <Button Canvas.Left="88" Canvas.Top="95" Width="26" Height="26" Content="↑" Tag="12" Click="PadBtn_Click" Style="{StaticResource PadKeyRound}"/>
-                    <Button Canvas.Left="88" Canvas.Top="147" Width="26" Height="26" Content="↓" Tag="13" Click="PadBtn_Click" Style="{StaticResource PadKeyRound}"/>
-                    <Button Canvas.Left="62" Canvas.Top="121" Width="26" Height="26" Content="←" Tag="14" Click="PadBtn_Click" Style="{StaticResource PadKeyRound}"/>
-                    <Button Canvas.Left="114" Canvas.Top="121" Width="26" Height="26" Content="→" Tag="15" Click="PadBtn_Click" Style="{StaticResource PadKeyRound}"/>
-                    <!-- menu -->
-                    <Button Canvas.Left="150" Canvas.Top="118" Width="28" Height="22" Content="Back" Tag="8" Click="PadBtn_Click" Style="{StaticResource PadKey}" FontSize="9"/>
-                    <Button Canvas.Left="186" Canvas.Top="118" Width="28" Height="22" Content="Start" Tag="9" Click="PadBtn_Click" Style="{StaticResource PadKey}" FontSize="9"/>
-                    <!-- sticks press -->
-                    <Button Canvas.Left="120" Canvas.Top="160" Width="34" Height="22" Content="L3" Tag="10" Click="PadBtn_Click" Style="{StaticResource PadKey}"/>
-                    <Button Canvas.Left="206" Canvas.Top="160" Width="34" Height="22" Content="R3" Tag="11" Click="PadBtn_Click" Style="{StaticResource PadKey}"/>
-                    <Button Canvas.Left="164" Canvas.Top="78" Width="36" Height="22" Content="Guide" Tag="16" Click="PadBtn_Click" Style="{StaticResource PadKey}" FontSize="9"/>
-                  </Canvas>
-                </Viewbox>
-
-                <DockPanel Grid.Row="2">
-                  <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
-                    <Button Content="恢复默认" Style="{StaticResource GhostButton}" Margin="0,0,8,0" Click="BtnDefault_Click"/>
-                    <Button Content="清空" Style="{StaticResource GhostButton}" Margin="0,0,8,0" Click="BtnClear_Click"/>
-                    <Button Content="保存" Style="{StaticResource PrimaryButton}" Click="BtnSave_Click"/>
-                  </StackPanel>
-                  <TextBlock Text="可多选组合键；再次点击同一键可取消。" Foreground="{StaticResource ColorBrushGray3}" FontSize="12" VerticalAlignment="Center"/>
-                </DockPanel>
-              </Grid>
-            </Border>
-
-            <Border x:Name="PageAbout" Style="{StaticResource CardBorder}" Visibility="Collapsed">
-              <StackPanel>
-                <TextBlock Text="关于" FontSize="15" FontWeight="SemiBold" Foreground="{StaticResource ColorBrush1}"/>
-                <TextBlock Margin="0,12,0,0" Foreground="{StaticResource ColorBrushGray2}" TextWrapping="Wrap"
-                           Text="FastMode — Windows 加速小工具。&#10;设置页核心：在手柄图上点选快捷键。&#10;悬浮窗：36×36 绿色方块显示 On/Off，默认置顶。"/>
+            <Border Background="{StaticResource ColorBrush8}" BorderBrush="#B7D9C6"
+                    BorderThickness="0,0,1,0">
+              <StackPanel Margin="10,14">
+                <RadioButton x:Name="NavGamepad" Content="{DynamicResource L10n.ControllerHotkey}"
+                             IsChecked="True" GroupName="settingsNav"
+                             Style="{StaticResource SettingsNavItem}" Checked="Nav_Checked" Tag="gamepad"/>
+                <RadioButton x:Name="NavKeyboard" Content="{DynamicResource L10n.KeyboardHotkey}"
+                             GroupName="settingsNav" Style="{StaticResource SettingsNavItem}"
+                             Checked="Nav_Checked" Tag="keyboard"/>
+                <RadioButton x:Name="NavAbout" Content="{DynamicResource L10n.About}"
+                             GroupName="settingsNav" Style="{StaticResource SettingsNavItem}"
+                             Checked="Nav_Checked" Tag="about"/>
               </StackPanel>
             </Border>
+
+            <Grid Grid.Column="1" Margin="18,14,18,16">
+              <Border x:Name="PageGamepad" Style="{StaticResource CardBorder}" VerticalAlignment="Stretch">
+                <Grid>
+                  <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                  </Grid.RowDefinitions>
+
+                  <StackPanel>
+                    <TextBlock Text="{DynamicResource L10n.ControllerHotkey}" FontSize="15"
+                               FontWeight="SemiBold" Foreground="{StaticResource ColorBrush1}"/>
+                    <TextBlock Text="{DynamicResource L10n.ControllerHotkeyDescription}"
+                               Foreground="{StaticResource ColorBrushGray3}" FontSize="12"
+                               Margin="0,6,0,0" TextWrapping="Wrap"/>
+                    <TextBlock x:Name="TxtGamepadSelected" Margin="0,10,0,0" FontWeight="SemiBold"
+                               Foreground="{StaticResource ColorBrush2}"/>
+                  </StackPanel>
+
+                  <Viewbox Grid.Row="1" Margin="0,12,0,8" Stretch="Uniform" MaxHeight="280">
+                    <Canvas x:Name="PadCanvas" Width="360" Height="220">
+                      <Border Canvas.Left="40" Canvas.Top="50" Width="280" Height="140" CornerRadius="70"
+                              Background="#EEF6F1" BorderBrush="#8FCEB0" BorderThickness="2"/>
+                      <Button Canvas.Left="70" Canvas.Top="28" Width="50" Height="22" Content="LB" Tag="4"
+                              Click="PadBtn_Click" Style="{StaticResource PadKey}"/>
+                      <Button Canvas.Left="240" Canvas.Top="28" Width="50" Height="22" Content="RB" Tag="5"
+                              Click="PadBtn_Click" Style="{StaticResource PadKey}"/>
+                      <Button Canvas.Left="70" Canvas.Top="6" Width="50" Height="18" Content="LT" Tag="6"
+                              Click="PadBtn_Click" Style="{StaticResource PadKey}"/>
+                      <Button Canvas.Left="240" Canvas.Top="6" Width="50" Height="18" Content="RT" Tag="7"
+                              Click="PadBtn_Click" Style="{StaticResource PadKey}"/>
+                      <Button Canvas.Left="250" Canvas.Top="95" Width="28" Height="28" Content="Y" Tag="3"
+                              Click="PadBtn_Click" Style="{StaticResource PadKeyRound}"/>
+                      <Button Canvas.Left="278" Canvas.Top="123" Width="28" Height="28" Content="B" Tag="1"
+                              Click="PadBtn_Click" Style="{StaticResource PadKeyRound}"/>
+                      <Button Canvas.Left="222" Canvas.Top="123" Width="28" Height="28" Content="X" Tag="2"
+                              Click="PadBtn_Click" Style="{StaticResource PadKeyRound}"/>
+                      <Button Canvas.Left="250" Canvas.Top="151" Width="28" Height="28" Content="A" Tag="0"
+                              Click="PadBtn_Click" Style="{StaticResource PadKeyRound}"/>
+                      <Button Canvas.Left="88" Canvas.Top="95" Width="26" Height="26" Content="↑" Tag="12"
+                              Click="PadBtn_Click" Style="{StaticResource PadKeyRound}"/>
+                      <Button Canvas.Left="88" Canvas.Top="147" Width="26" Height="26" Content="↓" Tag="13"
+                              Click="PadBtn_Click" Style="{StaticResource PadKeyRound}"/>
+                      <Button Canvas.Left="62" Canvas.Top="121" Width="26" Height="26" Content="←" Tag="14"
+                              Click="PadBtn_Click" Style="{StaticResource PadKeyRound}"/>
+                      <Button Canvas.Left="114" Canvas.Top="121" Width="26" Height="26" Content="→" Tag="15"
+                              Click="PadBtn_Click" Style="{StaticResource PadKeyRound}"/>
+                      <Button Canvas.Left="150" Canvas.Top="118" Width="28" Height="22" Content="Back" Tag="8"
+                              Click="PadBtn_Click" Style="{StaticResource PadKey}" FontSize="9"/>
+                      <Button Canvas.Left="186" Canvas.Top="118" Width="28" Height="22" Content="Start" Tag="9"
+                              Click="PadBtn_Click" Style="{StaticResource PadKey}" FontSize="9"/>
+                      <Button Canvas.Left="120" Canvas.Top="160" Width="34" Height="22" Content="L3" Tag="10"
+                              Click="PadBtn_Click" Style="{StaticResource PadKey}"/>
+                      <Button Canvas.Left="206" Canvas.Top="160" Width="34" Height="22" Content="R3" Tag="11"
+                              Click="PadBtn_Click" Style="{StaticResource PadKey}"/>
+                      <Button Canvas.Left="164" Canvas.Top="78" Width="36" Height="22" Content="Guide" Tag="16"
+                              Click="PadBtn_Click" Style="{StaticResource PadKey}" FontSize="9"/>
+                    </Canvas>
+                  </Viewbox>
+
+                  <DockPanel Grid.Row="2">
+                    <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
+                      <Button Content="{DynamicResource L10n.RestoreDefault}" Style="{StaticResource GhostButton}"
+                              Margin="0,0,8,0" Click="BtnPadDefault_Click"/>
+                      <Button Content="{DynamicResource L10n.Clear}" Style="{StaticResource GhostButton}"
+                              Margin="0,0,8,0" Click="BtnPadClear_Click"/>
+                      <Button Content="{DynamicResource L10n.Save}" Style="{StaticResource PrimaryButton}"
+                              Click="BtnSave_Click"/>
+                    </StackPanel>
+                    <TextBlock Text="{DynamicResource L10n.ControllerHotkeyHint}"
+                               Foreground="{StaticResource ColorBrushGray3}" FontSize="12"
+                               VerticalAlignment="Center" TextWrapping="Wrap"/>
+                  </DockPanel>
+                </Grid>
+              </Border>
+
+              <Border x:Name="PageKeyboard" Style="{StaticResource CardBorder}" Visibility="Collapsed">
+                <Grid>
+                  <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                  </Grid.RowDefinitions>
+
+                  <StackPanel>
+                    <TextBlock Text="{DynamicResource L10n.KeyboardHotkey}" FontSize="15"
+                               FontWeight="SemiBold" Foreground="{StaticResource ColorBrush1}"/>
+                    <TextBlock Text="{DynamicResource L10n.KeyboardHotkeyDescription}"
+                               Foreground="{StaticResource ColorBrushGray3}" FontSize="12"
+                               Margin="0,6,0,0" TextWrapping="Wrap"/>
+                    <TextBlock x:Name="TxtKeyboardSelected" Margin="0,10,0,0" FontWeight="SemiBold"
+                               Foreground="{StaticResource ColorBrush2}"/>
+                  </StackPanel>
+
+                  <StackPanel Grid.Row="1" Margin="0,16,0,10">
+                    <TextBlock Text="{DynamicResource L10n.ModifierKeys}" FontWeight="SemiBold"
+                               Foreground="{StaticResource ColorBrush1}" Margin="0,0,0,8"/>
+                    <StackPanel Orientation="Horizontal">
+                      <Button x:Name="BtnModifierControl" Content="Ctrl" Tag="Control" Width="76" Height="34"
+                              Margin="0,0,8,0" Style="{StaticResource PadKey}" Click="ModifierBtn_Click"/>
+                      <Button x:Name="BtnModifierShift" Content="Shift" Tag="Shift" Width="76" Height="34"
+                              Margin="0,0,8,0" Style="{StaticResource PadKey}" Click="ModifierBtn_Click"/>
+                      <Button x:Name="BtnModifierAlt" Content="Alt" Tag="Alt" Width="76" Height="34"
+                              Style="{StaticResource PadKey}" Click="ModifierBtn_Click"/>
+                    </StackPanel>
+                    <TextBlock Text="{DynamicResource L10n.MainKey}" FontWeight="SemiBold"
+                               Foreground="{StaticResource ColorBrush1}" Margin="0,14,0,8"/>
+                  </StackPanel>
+
+                  <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto"
+                                HorizontalScrollBarVisibility="Disabled">
+                    <WrapPanel x:Name="PanelKeyboardKeys"/>
+                  </ScrollViewer>
+
+                  <DockPanel Grid.Row="3" Margin="0,10,0,0">
+                    <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
+                      <Button Content="{DynamicResource L10n.RestoreDefault}" Style="{StaticResource GhostButton}"
+                              Margin="0,0,8,0" Click="BtnKeyboardDefault_Click"/>
+                      <Button Content="{DynamicResource L10n.Save}" Style="{StaticResource PrimaryButton}"
+                              Click="BtnSave_Click"/>
+                    </StackPanel>
+                    <TextBlock Text="{DynamicResource L10n.KeyboardHotkeyRule}"
+                               Foreground="{StaticResource ColorBrushGray3}" FontSize="12"
+                               VerticalAlignment="Center" TextWrapping="Wrap" MaxWidth="340"/>
+                  </DockPanel>
+                </Grid>
+              </Border>
+
+              <Border x:Name="PageAbout" Style="{StaticResource CardBorder}" Visibility="Collapsed">
+                <StackPanel>
+                  <TextBlock Text="{DynamicResource L10n.About}" FontSize="15" FontWeight="SemiBold"
+                             Foreground="{StaticResource ColorBrush1}"/>
+                  <TextBlock Margin="0,12,0,0" Foreground="{StaticResource ColorBrushGray2}"
+                             TextWrapping="Wrap" Text="{DynamicResource L10n.AboutText}"/>
+                </StackPanel>
+              </Border>
+            </Grid>
           </Grid>
-        </Grid>
         </Grid>
       </Border>
     </Border>
