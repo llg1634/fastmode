@@ -171,7 +171,7 @@ public static class ProcessService
             if (use == IntPtr.Zero) return null;
 
             var src = Imaging.CreateBitmapSourceFromHIcon(
-                use, Int32Rect.Empty, BitmapSizeOptions.FromWidthAndHeight(20, 20));
+                use, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
             src.Freeze();
             return src;
         }

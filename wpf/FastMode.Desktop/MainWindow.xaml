@@ -5,6 +5,7 @@
         Width="820" Height="560"
         MinWidth="700" MinHeight="480"
         WindowStartupLocation="CenterScreen"
+        Icon="Assets/FastMode.ico"
         WindowStyle="None"
         AllowsTransparency="True"
         Background="Transparent"
@@ -19,8 +20,9 @@
       </Border.Effect>
     </Border>
 
-    <Border x:Name="ShellBorder" Background="{StaticResource ColorBrushBgContent}" BorderBrush="#8FCEB0" BorderThickness="1.2" CornerRadius="12" ClipToBounds="True">
-      <Grid>
+    <Border x:Name="ShellBorder" Background="#69B98A" CornerRadius="14" Padding="2">
+      <Border Background="{StaticResource ColorBrushBgContent}" CornerRadius="12" ClipToBounds="True">
+        <Grid>
         <Grid.RowDefinitions>
           <RowDefinition Height="48"/>
           <RowDefinition Height="*"/>
@@ -129,6 +131,7 @@
                         <ColumnDefinition Width="*"/>
                       </Grid.ColumnDefinitions>
                       <Image Grid.Column="0" Width="20" Height="20" Stretch="Uniform"
+                             RenderOptions.BitmapScalingMode="HighQuality"
                              Source="{Binding Icon}" VerticalAlignment="Center"/>
                       <StackPanel Grid.Column="1" VerticalAlignment="Center">
                         <TextBlock Text="{Binding DisplayPrimary}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"
@@ -188,8 +191,12 @@
           <TextBlock x:Name="TxtStatus" Text="就绪" Margin="14,0" VerticalAlignment="Center" FontSize="12"
                      Foreground="{StaticResource ColorBrushGray3}" TextTrimming="CharacterEllipsis"/>
         </Border>
-      </Grid>
+        </Grid>
+      </Border>
     </Border>
+
+    <Border BorderBrush="#69B98A" BorderThickness="2" CornerRadius="14"
+            IsHitTestVisible="False" SnapsToDevicePixels="True"/>
 
     <!-- Resize grips (PCL-like) -->
     <Rectangle x:Name="ResizeN" Height="6" VerticalAlignment="Top" Margin="12,0" Fill="Transparent" Cursor="SizeNS"

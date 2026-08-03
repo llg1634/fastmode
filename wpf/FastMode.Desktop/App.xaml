@@ -50,6 +50,8 @@
         <Setter Property="FontFamily" Value="Segoe UI, Microsoft YaHei UI, Microsoft YaHei"/>
         <Setter Property="FontSize" Value="13"/>
         <Setter Property="Foreground" Value="{StaticResource ColorBrush1}"/>
+        <Setter Property="UseLayoutRounding" Value="True"/>
+        <Setter Property="SnapsToDevicePixels" Value="True"/>
       </Style>
 
       <!-- Rounded card with visible border -->

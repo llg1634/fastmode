@@ -10,11 +10,17 @@
     <Product>FastMode</Product>
     <Description>Windows speedhack utility - PCL-inspired native UI</Description>
     <Version>0.2.0</Version>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Assets\FastMode.ico</ApplicationIcon>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
-    <None Include="speedhack_x64.dll" Condition="Exists('speedhack_x64.dll')">
+    <None Include="..\..\src-tauri\resources\speedhack_x64.dll"
+          Link="speedhack_x64.dll"
+          Condition="Exists('..\..\src-tauri\resources\speedhack_x64.dll')">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <Resource Include="Assets\FastMode.ico" />
+    <Resource Include="Assets\FastMode.png" />
   </ItemGroup>
 </Project>
