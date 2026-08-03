@@ -2,7 +2,7 @@
 
 Search keywords: game fast mode, game speed tool, single-player game speedhack, single-player game speed changer, game process speed changer, game audio speed changer, synchronized game process and audio speed, Windows game speedhack, PC game speed tool, game speed adjustment tool, controller hotkey speed toggle, keyboard hotkey speed toggle.
 
-FastMode is a lightweight native process speed controller for Windows x64 applications, featuring visible-window target selection, preset and custom multipliers, synchronized audio acceleration, XInput controller hotkeys, configurable global keyboard shortcuts, Chinese/English runtime switching, and Per-Monitor V2 DPI support. English mode is built in and can be selected at runtime; for the full English documentation, see [README_EN.md](./README_EN.md).
+FastMode is a native Windows speed controller for single-player games: pick any running game and run it at your chosen multiplier — with game audio sped up in sync, and toggle via XInput controller combo or global hotkey. English mode is built in and can be selected at runtime; for the full English documentation, see [README_EN.md](./README_EN.md).
 
 ## 项目简介
 

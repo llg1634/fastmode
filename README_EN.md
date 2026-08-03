@@ -3,8 +3,8 @@
 <div align="center">
   <img src="./assets/FastMode.png" width="128" alt="FastMode icon">
   <h1>FastMode</h1>
-  <p><strong>A lightweight process speed controller for Windows x64 applications.</strong></p>
-  <p>Native WPF UI · Controller and keyboard shortcuts · Chinese/English switching · Synchronized audio speed</p>
+  <p><strong>A native Windows speed controller for single-player games.</strong></p>
+  <p>Pick any running game · Choose your speed · Game audio in sync · Gamepad &amp; keyboard hotkeys</p>
 </div>
 
 ## Overview
