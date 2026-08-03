@@ -33,13 +33,13 @@ FastMode adds its own application-level integration and extensions, including:
 
 | Item | Status |
 |---|---|
-| Current version | `v0.4.0 Preview` |
+| Current version | `v0.4.0` |
 | Operating system | Windows 10 / Windows 11 |
 | Architecture | x64 |
 | UI language | Simplified Chinese / English (Chinese by default) |
 | Main UI | Native WPF |
 | DPI awareness | Per-Monitor V2 |
-| Public release | `v0.2.0 Preview` published; `v0.4.0 Preview` package prepared |
+| Public release | `v0.4.0` published |
 
 ## Features
 
@@ -93,7 +93,7 @@ Applications use different audio engines, sample formats, and submission models.
 
 ## Version and Development Status
 
-The current review build is `v0.4.0 Preview`, and its main features are still being verified against real target applications.
+The current release is `v0.4.0`.
 
 - The native WPF desktop application is the active development line.
 - The Tauri/Web UI remains in the repository as an earlier implementation.

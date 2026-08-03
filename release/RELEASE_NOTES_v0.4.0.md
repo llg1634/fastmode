@@ -1,6 +1,6 @@
-# FastMode v0.4.0 Preview
+# FastMode v0.4.0
 
-FastMode 的第三个公开预览版本准备稿。
+FastMode 的正式发布版本，也是首个以 MIT 许可证发布的版本。
 
 ## 本版新增
 
