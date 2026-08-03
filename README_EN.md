@@ -13,20 +13,6 @@ FastMode packages process speed control into a standalone Windows desktop applic
 
 The current desktop application is built with native WPF and does not depend on a local web server or browser port. It uses a green visual language, a custom rounded window shell, and Per-Monitor V2 DPI awareness for sharp rendering across displays with different scaling factors. Simplified Chinese is used by default; click the language button at the top of the window to switch between Chinese and English at runtime.
 
-## Implementation Notes
-
-FastMode's process speed core is an **independent implementation**: it intercepts `GetTickCount`, `GetTickCount64`, `QueryPerformanceCounter` (`RtlQueryPerformanceCounter`) and `timeGetTime` via MinHook and scales the elapsed time the process perceives; when the multiplier changes, the time baselines are re-anchored so the transition is seamless. The principle is based on public Windows API documentation; the source contains no Cheat Engine code.
-
-FastMode adds its own application-level integration and extensions, including:
-
-- A native WPF desktop interface
-- Target discovery limited to applications with visible top-level windows
-- XInput controller detection and combination hotkeys
-- Audio-path hooks and synchronized multiplier handling
-- Spatial Audio shadow-buffer processing
-- Pitch-preserving time stretching with SoundTouch
-- Windows `PerMonitorV2` multi-display DPI support
-
 ## Current Status
 
 | Item | Status |

@@ -10,20 +10,6 @@ FastMode 将进程倍速控制整理为一个独立的 Windows 桌面程序。�
 
 项目使用原生 WPF 构建，不依赖本地 Web 服务或浏览器端口。界面采用绿色设计语言、自绘圆角窗口壳，并支持在不同 DPI 的显示器之间动态切换和重新渲染。程序默认使用简体中文，点击窗口顶部的中英文切换按钮即可在中文和英文之间即时切换。
 
-## 实现说明
-
-FastMode 的进程倍速核心为**独立实现**：通过 MinHook 拦截 `GetTickCount`、`GetTickCount64`、`QueryPerformanceCounter`（`RtlQueryPerformanceCounter`）与 `timeGetTime`，按倍率缩放进程感知的流逝时间；倍率切换时对时间基线重新锚定，保证过渡平滑。该原理基于公开的 Windows API 文档知识，源码不包含也不引用 Cheat Engine 的任何代码。
-
-FastMode 的扩展功能包括：
-
-- 原生 WPF 桌面界面
-- 仅显示具有可见顶层窗口的目标应用
-- XInput 手柄状态检测和组合键切换
-- 音频路径挂钩与同步倍率处理
-- Spatial Audio 影子缓冲处理
-- SoundTouch 保持音调的时间伸缩
-- Windows `PerMonitorV2` 多显示器高 DPI 适配
-
 ## 当前状态
 
 | 项目 | 状态 |
