@@ -157,6 +157,19 @@ typedef struct {
     BYTE *buffer;
     UINT32 requested_frames;
     UINT32 block_align;
+    UINT32 sample_rate;
+    UINT32 channels;
+    UINT32 bits;
+#ifdef FASTMODE_USE_SOUNDTOUCH
+    void *soundtouch;
+    float *staging;
+    float *scratch;
+    SIZE_T staging_capacity;
+    SIZE_T scratch_capacity;
+    SIZE_T staging_count;
+    float last_speed;
+    int format_ok;
+#endif
     int used;
 } WASAPIRenderRec;
 typedef struct {
@@ -178,6 +191,9 @@ static int g_hooked_wasapi = 0;
 static int g_xaudio_is_modern = 1;
 static volatile LONG g_scan_thread_started = 0;
 static UINT32 g_wasapi_block_align = 0;
+static UINT32 g_wasapi_sample_rate = 0;
+static UINT32 g_wasapi_channels = 0;
+static UINT32 g_wasapi_bits = 0;
 #define MAX_WASAPI_RENDERS 64
 static WASAPIRenderRec g_wasapi_renders[MAX_WASAPI_RENDERS];
 #define MAX_SPATIAL_OBJECTS 64
@@ -216,7 +232,8 @@ enum {
     AUDIO_STATUS_SPATIAL_HOOKED = 1 << 15,
     AUDIO_STATUS_SPATIAL_BUFFER_SEEN = 1 << 16,
     AUDIO_STATUS_SPATIAL_BUFFER_SCALED = 1 << 17,
-    AUDIO_STATUS_SPATIAL_TIMESTRETCHED = 1 << 18
+    AUDIO_STATUS_SPATIAL_TIMESTRETCHED = 1 << 18,
+    AUDIO_STATUS_WASAPI_TIMESTRETCHED = 1 << 19
 };
 
 static const GUID fsm_clsid_mmdevice_enumerator =
@@ -289,6 +306,144 @@ static WASAPIRenderRec *wasapi_find_render(void *renderClient, int create) {
     return NULL;
 }
 
+static int wasapi_format_supported(const WASAPIRenderRec *rec) {
+    if (!rec || !rec->sample_rate || !rec->channels || rec->channels > 32) return 0;
+    if (rec->bits != 16 && rec->bits != 32) return 0;
+    if (!rec->block_align || rec->block_align != rec->channels * (rec->bits / 8)) return 0;
+    return 1;
+}
+
+#ifdef FASTMODE_USE_SOUNDTOUCH
+static void wasapi_ensure_soundtouch(WASAPIRenderRec *rec) {
+    if (!rec || !wasapi_format_supported(rec)) return;
+    if (!rec->soundtouch) {
+        rec->soundtouch = st_create(rec->sample_rate, rec->channels);
+        rec->last_speed = 1.0f;
+        rec->staging_count = 0;
+    }
+}
+
+static int wasapi_ensure_scratch(WASAPIRenderRec *rec, SIZE_T samples) {
+    float *newBuffer;
+    if (!rec || !samples) return 0;
+    if (rec->scratch_capacity >= samples) return 1;
+    if (rec->scratch) {
+        newBuffer = (float *)HeapReAlloc(GetProcessHeap(), 0, rec->scratch,
+                                         samples * sizeof(float));
+    } else {
+        newBuffer = (float *)HeapAlloc(GetProcessHeap(), 0, samples * sizeof(float));
+    }
+    if (!newBuffer) return 0;
+    rec->scratch = newBuffer;
+    rec->scratch_capacity = samples;
+    return 1;
+}
+
+static int wasapi_ensure_staging(WASAPIRenderRec *rec, SIZE_T samples) {
+    float *newBuffer;
+    if (!rec || !samples) return 0;
+    if (rec->staging_capacity >= samples) return 1;
+    if (rec->staging) {
+        newBuffer = (float *)HeapReAlloc(GetProcessHeap(), 0, rec->staging,
+                                         samples * sizeof(float));
+    } else {
+        newBuffer = (float *)HeapAlloc(GetProcessHeap(), 0, samples * sizeof(float));
+    }
+    if (!newBuffer) return 0;
+    rec->staging = newBuffer;
+    rec->staging_capacity = samples;
+    return 1;
+}
+
+static void wasapi_to_float(const BYTE *src, UINT32 frames, UINT32 channels,
+                            UINT32 bits, float *dst) {
+    UINT32 i, j;
+    if (bits == 32) {
+        memcpy(dst, src, (SIZE_T)frames * channels * sizeof(float));
+        return;
+    }
+    for (i = 0; i < frames; i++) {
+        const INT16 *s16 = (const INT16 *)(src + (SIZE_T)i * channels * sizeof(INT16));
+        for (j = 0; j < channels; j++) {
+            dst[(SIZE_T)i * channels + j] = (float)s16[j] / 32768.0f;
+        }
+    }
+}
+
+static void wasapi_from_float(const float *src, UINT32 frames, UINT32 channels,
+                              UINT32 bits, BYTE *dst) {
+    UINT32 i, j;
+    if (bits == 32) {
+        memcpy(dst, src, (SIZE_T)frames * channels * sizeof(float));
+        return;
+    }
+    for (i = 0; i < frames; i++) {
+        INT16 *d16 = (INT16 *)(dst + (SIZE_T)i * channels * sizeof(INT16));
+        for (j = 0; j < channels; j++) {
+            float v = src[(SIZE_T)i * channels + j];
+            if (v < -1.0f) v = -1.0f;
+            if (v > 1.0f) v = 1.0f;
+            d16[j] = (INT16)(v * 32767.0f);
+        }
+    }
+}
+
+static int wasapi_process_soundtouch(WASAPIRenderRec *rec, UINT32 writtenFrames,
+                                     UINT32 *outputFramesOut, int *timestretched) {
+    float speed;
+    UINT32 targetFrames;
+    UINT32 availableFrames;
+    UINT32 takeFrames;
+    UINT32 received;
+    SIZE_T inputSamples;
+    SIZE_T outputSamples;
+    SIZE_T outputCapacityFrames;
+    SIZE_T remaining;
+    if (!rec || !rec->soundtouch || !rec->buffer || !writtenFrames ||
+        !outputFramesOut || !timestretched) return 0;
+    if (!wasapi_format_supported(rec)) return 0;
+    speed = fsm_current_speed();
+    if (fabsf(speed - 1.0f) <= 0.001f) return 0;
+    if (fabsf(rec->last_speed - speed) > 0.001f) {
+        rec->staging_count = 0;
+        rec->last_speed = speed;
+    }
+    targetFrames = (UINT32)((float)writtenFrames / speed + 0.5f);
+    if (targetFrames < 1) targetFrames = 1;
+    if (rec->requested_frames && targetFrames > rec->requested_frames)
+        targetFrames = rec->requested_frames;
+    inputSamples = (SIZE_T)writtenFrames * rec->channels;
+    outputSamples = (SIZE_T)targetFrames * rec->channels;
+    if (!wasapi_ensure_scratch(rec, inputSamples + outputSamples + 4096)) return 0;
+    if (!wasapi_ensure_staging(rec, rec->staging_count + outputSamples + 4096)) return 0;
+    wasapi_to_float(rec->buffer, writtenFrames, rec->channels, rec->bits, rec->scratch);
+    outputCapacityFrames = (rec->staging_capacity - rec->staging_count) / rec->channels;
+    if (outputCapacityFrames > targetFrames + 4096)
+        outputCapacityFrames = targetFrames + 4096;
+    received = st_process(rec->soundtouch, rec->scratch, writtenFrames, speed,
+                          rec->staging + rec->staging_count,
+                          (UINT32)outputCapacityFrames);
+    rec->staging_count += (SIZE_T)received * rec->channels;
+    availableFrames = (UINT32)(rec->staging_count / rec->channels);
+    takeFrames = availableFrames < targetFrames ? availableFrames : targetFrames;
+    if (takeFrames)
+        wasapi_from_float(rec->staging, takeFrames, rec->channels, rec->bits, rec->buffer);
+    if (takeFrames < targetFrames) {
+        ZeroMemory(rec->buffer + (SIZE_T)takeFrames * rec->block_align,
+                   (SIZE_T)(targetFrames - takeFrames) * rec->block_align);
+    }
+    remaining = rec->staging_count - (SIZE_T)takeFrames * rec->channels;
+    if (remaining && takeFrames) {
+        memmove(rec->staging, rec->staging + (SIZE_T)takeFrames * rec->channels,
+                remaining * sizeof(float));
+    }
+    rec->staging_count = remaining;
+    *outputFramesOut = targetFrames;
+    *timestretched = (received > 0 || rec->staging_count > 0);
+    return 1;
+}
+#endif
+
 static HRESULT STDMETHODCALLTYPE hook_RC_GetBuffer(void *this, UINT32 requestedFrames, BYTE **data) {
     HRESULT result;
     WASAPIRenderRec *record;
@@ -301,6 +456,13 @@ static HRESULT STDMETHODCALLTYPE hook_RC_GetBuffer(void *this, UINT32 requestedF
             record->buffer = *data;
             record->requested_frames = requestedFrames;
             if (!record->block_align) record->block_align = g_wasapi_block_align;
+            record->sample_rate = g_wasapi_sample_rate;
+            record->channels = g_wasapi_channels;
+            record->bits = g_wasapi_bits;
+#ifdef FASTMODE_USE_SOUNDTOUCH
+            record->format_ok = wasapi_format_supported(record);
+            wasapi_ensure_soundtouch(record);
+#endif
         }
         LeaveCriticalSection(&fsm_audio_lock);
         InterlockedOr(&g_audio_status, AUDIO_STATUS_WASAPI_BUFFER_SEEN);
@@ -314,6 +476,7 @@ static HRESULT STDMETHODCALLTYPE hook_RC_ReleaseBuffer(void *this, UINT32 writte
     float speed = fsm_current_speed();
     UINT32 outputFrames = writtenFrames;
     UINT32 i;
+    int processedBySoundtouch = 0;
     ZeroMemory(&snapshot, sizeof(snapshot));
     EnterCriticalSection(&fsm_audio_lock);
     record = wasapi_find_render(this, 0);
@@ -324,7 +487,41 @@ static HRESULT STDMETHODCALLTYPE hook_RC_ReleaseBuffer(void *this, UINT32 writte
     }
     LeaveCriticalSection(&fsm_audio_lock);
 
-    if (speed > 1.01f && writtenFrames > 1 && snapshot.buffer && snapshot.block_align) {
+#ifdef FASTMODE_USE_SOUNDTOUCH
+    if ((speed > 1.01f || speed < 0.99f) && writtenFrames > 0 && snapshot.buffer &&
+        snapshot.soundtouch && snapshot.format_ok && !(flags & 0x2)) {
+        UINT32 stretchedFrames = writtenFrames;
+        int timestretched = 0;
+        if (wasapi_process_soundtouch(&snapshot, writtenFrames, &stretchedFrames,
+                                      &timestretched)) {
+            outputFrames = stretchedFrames;
+            processedBySoundtouch = 1;
+            InterlockedOr(&g_audio_status, AUDIO_STATUS_WASAPI_BUFFER_SCALED);
+            if (timestretched)
+                InterlockedOr(&g_audio_status, AUDIO_STATUS_WASAPI_TIMESTRETCHED);
+        }
+    }
+#endif
+
+#ifdef FASTMODE_USE_SOUNDTOUCH
+    if (processedBySoundtouch) {
+        WASAPIRenderRec *persist;
+        EnterCriticalSection(&fsm_audio_lock);
+        persist = wasapi_find_render(this, 0);
+        if (persist && persist->render_client == snapshot.render_client) {
+            persist->staging = snapshot.staging;
+            persist->staging_capacity = snapshot.staging_capacity;
+            persist->staging_count = snapshot.staging_count;
+            persist->scratch = snapshot.scratch;
+            persist->scratch_capacity = snapshot.scratch_capacity;
+            persist->last_speed = snapshot.last_speed;
+        }
+        LeaveCriticalSection(&fsm_audio_lock);
+    }
+#endif
+
+    if (!processedBySoundtouch && speed > 1.01f && writtenFrames > 1 &&
+        snapshot.buffer && snapshot.block_align) {
         outputFrames = (UINT32)((float)writtenFrames / speed);
         if (outputFrames < 1) outputFrames = 1;
         if (outputFrames > writtenFrames) outputFrames = writtenFrames;
@@ -688,7 +885,12 @@ static void hook_audio_client_methods(void *audioClient) {
 static HRESULT STDMETHODCALLTYPE hook_AC_Initialize(
     void *this, int shareMode, DWORD streamFlags, LONGLONG bufferDuration,
     LONGLONG periodicity, const WAVEFORMATEX *format, LPCGUID sessionGuid) {
-    if (format && format->nBlockAlign) g_wasapi_block_align = format->nBlockAlign;
+    if (format && format->nBlockAlign) {
+        g_wasapi_block_align = format->nBlockAlign;
+        g_wasapi_sample_rate = format->nSamplesPerSec;
+        g_wasapi_channels = format->nChannels;
+        g_wasapi_bits = format->wBitsPerSample;
+    }
     if (!real_AC_Initialize) return E_FAIL;
     return real_AC_Initialize(this, shareMode, streamFlags, bufferDuration,
                               periodicity, format, sessionGuid);
@@ -778,6 +980,9 @@ static void bootstrap_wasapi(void) {
     result = getMixFormat(audioClient, &mixFormat);
     if (FAILED(result) || !mixFormat) goto cleanup;
     g_wasapi_block_align = mixFormat->nBlockAlign;
+    g_wasapi_sample_rate = mixFormat->nSamplesPerSec;
+    g_wasapi_channels = mixFormat->nChannels;
+    g_wasapi_bits = mixFormat->wBitsPerSample;
     result = initialize(audioClient, 0, 0, 1000000, 0, mixFormat, NULL);
     if (FAILED(result)) goto cleanup;
     result = getService(audioClient, &fsm_iid_audio_render_client, &renderClient);

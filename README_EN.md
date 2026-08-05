@@ -17,13 +17,13 @@ The current desktop application is built with native WPF and does not depend on 
 
 | Item | Status |
 |---|---|
-| Current version | `v0.4.0` |
+| Current version | `v0.5.0` |
 | Operating system | Windows 10 / Windows 11 |
 | Architecture | x64 |
 | UI language | Simplified Chinese / English (Chinese by default) |
 | Main UI | Native WPF |
 | DPI awareness | Per-Monitor V2 |
-| Public release | `v0.4.0` published |
+| Public release | `v0.5.0` prepared |
 
 ## Features
 
@@ -62,7 +62,7 @@ If the target application runs as administrator, FastMode will usually need to r
 
 When process acceleration is enabled, audio follows the same multiplier automatically. There is no separate audio setting.
 
-The native module currently covers or probes XAudio2, DirectSound, waveOut, WASAPI, and Windows Spatial Audio paths. The Spatial Audio implementation requests additional source samples through shadow buffers and uses SoundTouch time stretching to increase playback tempo while attempting to preserve the original pitch.
+The native module currently covers or probes XAudio2, DirectSound, waveOut, WASAPI, and Windows Spatial Audio paths. The Spatial Audio implementation requests additional source samples through shadow buffers and uses SoundTouch time stretching to increase playback tempo while attempting to preserve the original pitch. WASAPI now supports the same SoundTouch pitch-preserving processing for 16/32-bit PCM or float formats and falls back to the original sampling logic for unsupported formats.
 
 Applications use different audio engines, sample formats, and submission models. Audio compatibility therefore needs to be verified per target. Non-Spatial Audio paths may use different fallback behavior and are not guaranteed to provide the same pitch-preserving result.
 
@@ -77,7 +77,7 @@ Applications use different audio engines, sample formats, and submission models.
 
 ## Version and Development Status
 
-The current release is `v0.4.0`.
+The current release is `v0.5.0`.
 
 - The native WPF desktop application is the active development line.
 - The Tauri/Web UI remains in the repository as an earlier implementation.

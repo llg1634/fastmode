@@ -14,13 +14,13 @@ FastMode 将进程倍速控制整理为一个独立的 Windows 桌面程序。�
 
 | 项目 | 状态 |
 |---|---|
-| 当前版本 | `v0.4.0` |
+| 当前版本 | `v0.5.0` |
 | 操作系统 | Windows 10 / Windows 11 |
 | 架构 | x64 |
 | 界面语言 | 简体中文 / English（默认中文） |
 | 主界面 | 原生 WPF |
 | DPI | Per-Monitor V2 |
-| 公开下载 | `v0.4.0` 已发布 |
+| 公开下载 | `v0.5.0` 已准备 |
 
 ## 主要功能
 
@@ -59,7 +59,7 @@ FastMode 将进程倍速控制整理为一个独立的 Windows 桌面程序。�
 
 进程倍速启用后，音频默认跟随同一个倍率，不需要额外设置。
 
-当前原生模块覆盖或探测的音频路径包括 XAudio2、DirectSound、waveOut、WASAPI 和 Windows Spatial Audio。Spatial Audio 路径使用扩展缓冲区收集更多源样本，并通过 SoundTouch 执行时间伸缩，以尽量在提高播放速度时保持原始音调。
+当前原生模块覆盖或探测的音频路径包括 XAudio2、DirectSound、waveOut、WASAPI 和 Windows Spatial Audio。Spatial Audio 路径使用扩展缓冲区收集更多源样本，并通过 SoundTouch 执行时间伸缩；WASAPI 路径同样支持 SoundTouch 保音高处理，覆盖 16/32 位 PCM 或 float 格式，不支持的格式自动回退到原有抽样逻辑。
 
 不同程序使用的音频引擎、样本格式和提交方式并不相同，因此音频同步效果需要按目标程序实际验证。非 Spatial Audio 路径可能采用不同回退方式，不能保证所有程序都具有相同的保音调效果。
 
@@ -74,7 +74,7 @@ FastMode 将进程倍速控制整理为一个独立的 Windows 桌面程序。�
 
 ## 版本与开发状态
 
-当前正式版本为 `v0.4.0`。
+当前正式版本为 `v0.5.0`。
 
 - 桌面端以 WPF 原生版本为当前主线。
 - 仓库中的 Tauri/Web UI 仅作为早期实现保留。

@@ -1,6 +1,6 @@
 [package]
 name = "fastmode"
-version = "0.1.0"
+version = "0.5.0"
 description = "FastMode - Windows speedhack utility"
 authors = ["FastMode"]
 edition = "2021"

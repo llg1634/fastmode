@@ -1,5 +1,5 @@
 param(
-    [string]$Version = "0.4.0",
+    [string]$Version = "0.5.0",
     [string]$ReleaseRoot = ""
 )
 
@@ -45,8 +45,8 @@ Get-ChildItem -LiteralPath $packageDir -Filter *.pdb -File | Remove-Item -Force
 Copy-Item -LiteralPath (Join-Path $repoRoot "README.md") -Destination (Join-Path $packageDir "README.md")
 Copy-Item -LiteralPath (Join-Path $repoRoot "README_EN.md") -Destination (Join-Path $packageDir "README_EN.md")
 
-$releaseNotesSource = Join-Path $repoRoot "release\RELEASE_NOTES_v0.4.0.md"
-$releaseNotesRoot = Join-Path $releaseRootFull "RELEASE_NOTES_v0.4.0.md"
+$releaseNotesSource = Join-Path $repoRoot "release\RELEASE_NOTES_v0.5.0.md"
+$releaseNotesRoot = Join-Path $releaseRootFull "RELEASE_NOTES_v0.5.0.md"
 Copy-Item -LiteralPath $releaseNotesSource -Destination $releaseNotesRoot
 Copy-Item -LiteralPath $releaseNotesSource -Destination (Join-Path $packageDir "RELEASE_NOTES.md")
 
@@ -76,7 +76,7 @@ $newLines = @(
     "$dllHash  $packageName/speedhack_x64.dll"
 )
 
-$versionChecksums = Join-Path $releaseRootFull "SHA256SUMS_v0.4.0.txt"
+$versionChecksums = Join-Path $releaseRootFull "SHA256SUMS_v0.5.0.txt"
 $newLines | Set-Content -LiteralPath $versionChecksums -Encoding utf8
 
 $aggregateChecksums = Join-Path $releaseRootFull "SHA256SUMS.txt"
