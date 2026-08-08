@@ -1,3 +1,5 @@
+# FastMode
+
 搜索关键词：游戏快速模式、游戏倍速工具、单机游戏倍速、单机游戏变速器、游戏进程倍速、游戏音频倍速、游戏进程和音频同步倍速、Windows 游戏倍速、PC 游戏倍速工具、游戏速度调节工具、手柄快捷键切换倍速、键盘快捷键切换倍速。
 
 Search keywords: game fast mode, game speed tool, single-player game speedhack, single-player game speed changer, game process speed changer, game audio speed changer, synchronized game process and audio speed, Windows game speedhack, PC game speed tool, game speed adjustment tool, controller hotkey speed toggle, keyboard hotkey speed toggle.
