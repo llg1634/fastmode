@@ -2,7 +2,7 @@
 
 <div align="center">
   <img src="./assets/FastMode.png" width="128" alt="FastMode icon">
-  <h1>FastMode</h1>
+  <h1>Game Speed Tool: Synchronized Game Process and Audio Speed Change</h1>
   <p><strong>A native Windows speed controller for single-player games.</strong></p>
   <p>Pick any running game · Choose your speed · Game audio in sync · Gamepad &amp; keyboard hotkeys</p>
 </div>
